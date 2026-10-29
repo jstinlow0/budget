@@ -122,8 +122,9 @@ footer button,footer label,.banner button{border:1px solid var(--line);backgroun
   <div id="drive"></div>
   <button id="export">Export backup</button>
   <label>Import backup <input id="import" type="file" accept="application/json,.json" hidden></label>
+  <label>Import bank CSV <input id="bank" type="file" accept=".csv,text/csv" hidden></label>
   <span>Data is saved on this device, plus your own Google Drive if Drive backup is on.</span>
-  <span>App version 2026.10.29-4 <!-- change this date each time you upload a new version --></span>
+  <span>App version 2026.10.29-5 <!-- change this date each time you upload a new version --></span>
 </footer>
 <script>
 // ===== 2. CATEGORIES: names, colors (--c1..--c8 above) and the words that pick them =====
@@ -133,13 +134,13 @@ const color=k=>k==='Income'?'var(--ok)':EXP.indexOf(k)<8&&EXP.includes(k)?`var(-
 const KW={
   Income:'salary,paycheck,payroll,pay,wage,bonus,income,refund,dividend,freelance,tips,commission,reimbursement,cashback,side hustle,deposit',
   Housing:'rent,mortgage,hoa,renters insurance,home insurance,property tax,cleaning,maid,furniture,home repair,repair,landlord,parking fee,storage',
-  Food:'grocery,groceries,food,chips,snack,restaurant,dinner,lunch,breakfast,coffee,starbucks,mcdonalds,pizza,burger,taco,sushi,doordash,uber eats,grubhub,costco,trader joes,safeway,kroger,whole foods,aldi,boba,drink,beer,wine,bakery,takeout,fast food,chipotle,candy,soda,meal',
-  Transportation:'gas,fuel,shell,chevron,exxon,arco,uber,lyft,car,vehicle,auto,toll,parking,registration,dmv,maintenance,oil change,tire,bus,train,metro,transit,car payment,car insurance,vehicle insurance,auto insurance,smog,car wash',
-  Utilities:'electric,electricity,power,water,natural gas,gas bill,internet,wifi,phone,cell,mobile,tv,cable,trash,sewer,utility,utilities,verizon,at&t,t-mobile,comcast,xfinity,spectrum,pg&e',
-  Personal:'shopping,amazon,clothes,clothing,shoe,haircut,salon,barber,target,walmart,gift,makeup,toiletries,laundry,doctor,dentist,pharmacy,medicine,cvs,walgreens,gym,fitness,health,medical,therapy,glasses,health insurance,school,tuition,book,pet,vet',
-  Entertainment:'netflix,spotify,hulu,disney,youtube,movie,game,steam,playstation,xbox,nintendo,concert,outing,ticket,subscription,tcg,pokemon,trading card,hobby,travel,hotel,flight,airbnb,bar,club,party,fun',
-  Debt:'loan,student loan,school loan,credit card,cc payment,debt,payoff,installment,affirm,klarna,minimum payment',
-  'Savings & Goals':'savings,save,emergency,retirement,401k,ira,roth,invest,investing,investment,brokerage,fund,down payment,goal,hysa,stock,crypto'};
+  Food:'grocery,groceries,food,chips,snack,restaurant,dinner,lunch,breakfast,coffee,starbucks,mcdonalds,pizza,burger,taco,sushi,doordash,uber eats,grubhub,costco,trader joes,safeway,kroger,whole foods,aldi,boba,drink,beer,wine,bakery,takeout,fast food,chipotle,candy,soda,meal,mcdonald,wendy,popeyes,culvers,burger king,taco bell,caribou,bonchon,cub foods,super market,supermarket,vending,fooda,liquor,banh mi,tous les jours,seafood',
+  Transportation:'gas,fuel,shell,chevron,exxon,arco,uber,lyft,car,vehicle,auto,toll,parking,registration,dmv,maintenance,oil change,tire,bus,train,metro,transit,car payment,car insurance,vehicle insurance,auto insurance,smog,car wash,circle k,circlek,speedway,bp,holiday,mazda,progressive,prog preferred,impark,onstreet',
+  Utilities:'electric,electricity,power,water,natural gas,gas bill,internet,wifi,phone,cell,mobile,tv,cable,trash,sewer,utility,utilities,verizon,at&t,t-mobile,comcast,xfinity,spectrum,pg&e,xcel,energy',
+  Personal:'shopping,amazon,clothes,clothing,shoe,haircut,salon,barber,target,walmart,gift,makeup,toiletries,laundry,doctor,dentist,pharmacy,medicine,cvs,walgreens,gym,fitness,health,medical,therapy,glasses,health insurance,school,tuition,book,pet,vet,petco,wal-mart,wm supercenter,old navy,best buy,ikea,betterhelp,office depot,officedepo',
+  Entertainment:'netflix,spotify,hulu,disney,youtube,movie,game,steam,playstation,xbox,nintendo,concert,outing,ticket,subscription,tcg,pokemon,trading card,hobby,travel,hotel,flight,airbnb,bar,club,party,fun,patreon,casino,gaming,games,cards',
+  Debt:'loan,student loan,school loan,credit card,cc payment,debt,payoff,installment,affirm,klarna,minimum payment,e-payment,crcardpmt,cc payment,mobile pmt',
+  'Savings & Goals':'savings,save,emergency,retirement,401k,ira,roth,invest,investing,investment,brokerage,fund,down payment,goal,hysa,stock,crypto,acorns,way2save'};
 const RULES=Object.entries(KW).flatMap(([cat,words])=>words.split(',').map(w=>({cat,len:w.length,re:new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}s?\\b`,'i')})));
 const norm=s=>String(s||'').trim().toLowerCase();
 // Your own corrections win; otherwise the longest matching keyword wins ("vehicle insurance" beats "vehicle").
@@ -433,6 +434,47 @@ document.getElementById('import').onchange=async e=>{
   e.target.value='';
 };
 
+// Bank CSV: each transaction lands in its month. An unpaid recurring item with the exact same amount gets checked off
+// instead of added twice. Importing the same file again skips rows already imported.
+function csv(t){const rows=[[]];let f='',q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===','){rows.at(-1).push(f);f=''}
+    else if(c==='\n'){rows.at(-1).push(f.replace(/\r$/,''));f='';rows.push([])}else f+=c}
+  rows.at(-1).push(f);return rows.filter(r=>r.join('').trim())}
+// "PURCHASE AUTHORIZED ON 10/27 CIRCLE K #2653850 1770 SAINT PAUL MN P0000… CARD 7077" → "Circle K"
+const bankName=d=>d.replace(/\s+/g,' ').replace(/^(PURCHASE( RETURN)?|RECURRING PAYMENT) AUTHORIZED ON \d\d\/\d\d /i,'')
+  .replace(/ ON \d\d\/\d\d\b/,'').replace(/ REF # \S+/,'').replace(/#\S*/g,'').replace(/\b(TST|SQ|PY|PP|CTLP|BH) ?\*/g,'')
+  .replace(/ ?(\S*\d{4}|(?=\S*\d)\S{10,})\S*.*$/,'').replace(/ [A-Z]{2}$/,'').replace(/ +/g,' ').trim().toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase())||'Bank transaction';
+function bankImport(text){
+  const rows=csv(text),head=rows[0].map(norm),col=re=>head.findIndex(h=>re.test(h));
+  let [di,ni,ai]=[col(/date/),col(/desc|payee|name|memo/),col(/amount/)];
+  if(di<0||ni<0||ai<0){if(rows[0].length===5&&/\d\/\d/.test(rows[0][0]))[di,ni,ai]=[0,4,1];else return null}// Wells Fargo files without a header row
+  else rows.shift();
+  // shortcut: banks that split money into separate Debit/Credit columns aren't read, add them if someone needs it
+  const seen=new Set(M.flatMap(m=>[...S.months[m].lines.map(l=>l.ref),...Object.values(S.months[m].rec).map(r=>r.ref)]));
+  const res={added:0,paid:0,dup:0,other:0};
+  for(const r of rows){
+    const [mm,dd,yy]=String(r[di]).split('/').map(Number),a=n(String(r[ai]).replace(/[$,]/g,''));
+    if(!mm||!a||String(yy).slice(-2)!==String(S.year).slice(-2)){res.other++;continue}
+    const ref=[r[di],r[ai],r[ni]].join('|');if(seen.has(ref)){res.dup++;continue}seen.add(ref);
+    const mi=mm-1,m=S.months[M[mi]],date=`${S.year}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+    const it=S.items.find(it=>active(it,mi)&&!m.rec[it.id]?.ref&&m.rec[it.id]?.status!=='Done'&&(it.cat==='Income')===(a>0)&&n(eff(it,mi))===Math.abs(a));
+    if(it){Object.assign(m.rec[it.id]??={},{status:'Done',date,ref});res.paid++;continue}
+    const name=bankName(String(r[ni]));
+    m.lines.push({name,cat:a>0?'Income':guess(name),amount:String(Math.abs(a)),date,status:'Done',ref});res.added++;
+  }
+  return res;
+}
+document.getElementById('bank').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const before=JSON.stringify(S),res=bankImport(await f.text());
+  if(!res)return alert('That file doesn\'t look like a bank CSV (it needs Date, Description and Amount columns).');
+  if(!confirm(`Add ${res.added} entries and check off ${res.paid} recurring bills?`+(res.dup?`\n${res.dup} were already imported and will be skipped.`:'')
+    +(res.other?`\n${res.other} rows are not in ${S.year} and will be skipped.`:''))){S=JSON.parse(before);return}
+  save();render();
+};
+
 // ===== 7. GOOGLE DRIVE AUTO-BACKUP =====
 // Paste your OAuth Client ID between the quotes (see README). Left empty, Drive backup stays hidden.
 const GOOGLE_CLIENT_ID='558610090512-hq8fkco1b3r959t3lqb70l7dddmmjjt2.apps.googleusercontent.com';
@@ -528,6 +570,9 @@ setInterval(()=>D.on&&paintDrive(),60e3); // refreshes "saved N min ago"; does n
  console.assert(guess('Chips')==='Food'&&guess('Vehicle Insurance')==='Transportation'&&guess('Netflix')==='Entertainment'&&guess('Rent')==='Housing'&&guess('gas bill')==='Utilities'&&guess('Gas')==='Transportation'&&guess('xyz')==='Other','guess self-check failed');
  S.items.push({id:'t',name:'Rent',cat:'Housing',amount:'1000',start:2});freeze(S.items.at(-1),5);S.items.at(-1).amount='1200';
  console.assert(calc(4).cats.Housing===1000&&calc(5).cats.Housing===1200&&calc(1).cats.Housing===0,'recurring self-check failed');
+ const f=`"DATE","DESCRIPTION","AMOUNT"\n"05/01/${S.year}","RENT, MAY","-1,000.00"\n"05/02/${S.year}","PURCHASE AUTHORIZED ON 05/01 CIRCLE K #26 1770 SAINT PAUL MN P0000004478 CARD 7077","-40.08"\n`;
+ const b1=bankImport(f),b2=bankImport(f),l=S.months.May.lines.at(-1);
+ console.assert(b1.paid===1&&b1.added===1&&b2.dup===2&&S.months.May.rec.t.status==='Done'&&l.name==='Circle K'&&l.cat==='Transportation'&&l.date===`${S.year}-05-02`,'bank import self-check failed',b1,b2,l);
  S=s;}
 
 render();spinTo(S.view);paintWheel();paintDrive();handleRedirect();if(D.dirty)backupNow();
