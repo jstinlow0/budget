@@ -36,10 +36,10 @@ header h1{margin:0 0 6px;font-size:15px;text-align:center}
 .pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .wheelwrap{position:relative;flex:1;min-width:0}
 .wheelwrap::before{content:"";position:absolute;left:50%;top:-4px;transform:translateX(-50%);border:7px solid transparent;border-top-color:var(--accent);z-index:1}
-.wheel{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;perspective:260px;padding:6px calc(50% - 30px);
+.wheel{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;perspective:260px;padding:9px calc(50% - 33px);
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent)}
 .wheel::-webkit-scrollbar{display:none}
-.wheel button{flex:0 0 60px;height:40px;scroll-snap-align:center;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;cursor:pointer;font:600 14px var(--font);transition:background .2s,color .2s}
+.wheel button{flex:0 0 66px;height:38px;scroll-snap-align:center;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;cursor:pointer;font:600 14px var(--font);transition:background .2s,color .2s}
 .wheel button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 main{max-width:1100px;margin:0 auto;padding:12px 16px}
 h2{margin:4px 0;font-size:22px}
@@ -79,19 +79,32 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
 .legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:middle}
 /* category wheel */
 .catwheel{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center}
-.donut{position:relative;width:220px;height:220px;flex:0 0 auto}
+section.fit{overflow:visible}
+.donut{position:relative;width:min(220px,100%);aspect-ratio:1;flex:0 0 auto}
 .donut::before{content:"";position:absolute;left:50%;top:-6px;transform:translateX(-50%);border:9px solid transparent;border-top-color:var(--ink);z-index:1}
 .donut svg{width:100%;height:100%;transition:transform 1.1s cubic-bezier(.15,.85,.25,1)}
 .donut circle{cursor:pointer;pointer-events:stroke}
 .dcenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;text-align:center}
 .dcenter span{font-size:12px;color:var(--muted)}
 .dcenter b{font-size:20px;font-variant-numeric:tabular-nums}
-.catlist{display:flex;flex-direction:column;gap:4px;min-width:220px;flex:1;max-width:360px}
+.catlist{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 200px;max-width:360px}
+input[type=checkbox]{width:22px;height:22px;min-width:0;accent-color:var(--ok);cursor:pointer;display:block;margin:auto}
+[data-act=jump]{cursor:pointer}
+[data-act=jump]:hover,[data-act=jump]:focus-visible{border-color:var(--accent)}
+[data-jump]{scroll-margin-top:140px}
+.flash{animation:flash 1.4s ease-out}
+@keyframes flash{from{box-shadow:0 0 0 3px var(--accent);background-color:var(--input)}}
+details.settings{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:12px 0}
+details.settings summary{cursor:pointer;font-weight:600;color:var(--muted)}
 .catlist button{display:flex;align-items:center;gap:6px;border:1px solid transparent;background:none;color:var(--ink);padding:6px 8px;border-radius:6px;cursor:pointer;font:inherit;text-align:left}
 .catlist button.on{border-color:var(--ink)}
 .catlist button b{margin-left:auto;font-variant-numeric:tabular-nums}
 footer{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:12px;padding:0 16px 24px;max-width:1100px;margin:0 auto}
-footer button,footer label{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
+footer button,footer label,.banner button{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
+#drive{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%}
+.banner{max-width:1100px;margin:10px auto 0;padding:0 16px}
+.banner div{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--input);border:1px solid var(--accent);border-radius:10px;padding:10px 12px;font-weight:600}
+.banner button.go{background:var(--accent);border-color:var(--accent);color:#fff}
 </style>
 </head>
 <body>
@@ -103,12 +116,14 @@ footer button,footer label{border:1px solid var(--line);background:var(--panel);
     <button class="pill" data-act="tab" data-k="assets">Assets &amp; Goals</button>
   </div>
 </header>
+<div class="banner" id="banner"></div>
 <main id="app"></main>
 <footer>
+  <div id="drive"></div>
   <button id="export">Export backup</button>
   <label>Import backup <input id="import" type="file" accept="application/json,.json" hidden></label>
-  <span>Data is saved on this device only. Export a backup now and then.</span>
-  <span>App version 2026.10.29 <!-- change this date each time you upload a new version --></span>
+  <span>Data is saved on this device, plus your own Google Drive if Drive backup is on.</span>
+  <span>App version 2026.10.29-4 <!-- change this date each time you upload a new version --></span>
 </footer>
 <script>
 // ===== 2. CATEGORIES: names, colors (--c1..--c8 above) and the words that pick them =====
@@ -202,7 +217,7 @@ function freeze(it,mi){for(let i=it.start;i<mi;i++){const r=S.months[M[i]].rec[i
 try{const d=JSON.parse(localStorage.getItem(KEY));if(d)S=migrate(d)}catch{}
 S??=seed();
 let tab='dash',selCat=null,spins=0,resort=false;
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch{}};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch{}scheduleBackup()};
 const get=k=>k.split('.').reduce((o,p)=>o?.[p],S);
 function set(k,v){const p=k.split('.'),last=p.pop();let o=S;for(const x of p)o=o[x]??={};o[last]=v}
 
@@ -212,10 +227,11 @@ const sel=(k,v,opts,label)=>`<select data-k="${k}" aria-label="${esc(label)}">${
 const catSel=(k,v)=>sel(k,v,CATS,'Category').replace('<select','<select class="cat" style="--dot:'+color(v)+'"').replace('<option></option>','');
 const status=(k,v,label)=>sel(k,v,['Done','Upcoming'],label);
 const del=(k,i,label)=>`<button class="x" data-act="del" data-k="${k}" data-i="${i}" aria-label="Remove ${esc(label)}">×</button>`;
-const card=(label,v,cls='')=>`<div class="card ${cls}" data-c><span>${label}</span><b>${typeof v==='number'?usd(v):v}</b></div>`;
+// jump = "Month:section" (or "assets:"), so tapping the card takes you there.
+const card=(label,v,cls='',jump)=>`<div class="card ${cls}" data-c${jump?` data-act="jump" data-k="${jump}" role="button" tabindex="0"`:''}><span>${label}</span><b>${typeof v==='number'?usd(v):v}</b></div>`;
 const bar=p=>`<div class="bar"><i data-c style="width:${Math.min(Math.max(p,0),1)*100}%"></i></div>`;
 const C=(v,cls='n')=>`<td class="${cls}" data-c>${v}</td>`;
-const grp=(cat,cols)=>`<tr class="grp"><td colspan="${cols}"><span class="dot" style="background:${color(cat)}"></span>${cat}</td></tr>`;
+const grp=(cat,cols)=>`<tr class="grp"${cat==='Income'?' data-jump="income"':cat==='Savings & Goals'?' data-jump="savings"':''}><td colspan="${cols}"><span class="dot" style="background:${color(cat)}"></span>${cat}</td></tr>`;
 // Rows shown grouped by category, so an entry moves to its category once it's named.
 function grouped(rows,cols,row){let last,out='';
   rows.sort((a,b)=>CATS.indexOf(a.r.cat)-CATS.indexOf(b.r.cat)||a.i-b.i).forEach(x=>{if(x.r.cat!==last)out+=grp(last=x.r.cat,cols);out+=row(x.r,x.i)});
@@ -244,15 +260,16 @@ function monthView(mo){
   const oneRows=m.lines.map((r,i)=>({r,i}));
   return `<h2>${FULL[mi]} <span data-c>${esc(S.year)}</span></h2>
   <p class="msg ${c.tone}" data-c>${msg(c)}</p>
-  <div class="cards">${card('Income',c.inc)}${card('Spent + saved',c.total)}${card('Left to assign',c.left,c.tone)}</div>
-  <section><h3>Where the money goes</h3>${catWheel(c)}</section>
-  <section><h3>Every month (recurring)</h3>
+  <div class="cards">${card('Income',c.inc,'',mo+':income')}${card('Spent + saved',c.total,'',mo+':spending')}${card('Left to assign',c.left,c.tone,mo+':savings')}</div>
+  <section class="fit" data-jump="spending"><h3>Where the money goes</h3>${catWheel(c)}</section>
+  <section data-jump="recurring"><h3>Every month (recurring)</h3>
     <p class="hint">These show up in every month from here on. Change "Usual" and it updates this month and later ones. Use "This month" when one month is different.</p>
-    <table><thead><tr><th>Name</th><th>Category</th><th class="n">Usual</th><th class="n">This month</th><th>Due date</th><th>Status</th><th></th></tr></thead><tbody>
+    <table><thead><tr><th>Name</th><th>Category</th><th class="n">Usual</th><th class="n">This month</th><th>Due date</th><th>Paid?</th><th></th></tr></thead><tbody>
     ${grouped(recRows,7,(it,i)=>{const r=m.rec[it.id]||{},k=`${b}.rec.${it.id}`;
       return `<tr><td>${inp(`items.${i}.name`,it.name,'Name')}</td><td>${catSel(`items.${i}.cat`,it.cat)}</td>
       <td>${inp(`items.${i}.amount`,it.amount,'Usual amount','number','0.00')}</td><td>${inp(k+'.amount',r.amount,'This month only','number',it.amount===''?'0.00':n(it.amount).toFixed(2))}</td>
-      <td>${inp(k+'.date',r.date,'Due date','date')}</td><td>${status(k+'.status',r.status,'Status')}</td>
+      <td>${inp(k+'.date',r.date,'Due date','date')}</td>
+      <td><input type="checkbox" data-k="${k}.status"${r.status==='Done'?' checked':''} aria-label="${esc(it.name)} paid this month"></td>
       <td><button class="x" data-act="stop" data-i="${i}" aria-label="Stop ${esc(it.name)} from ${mo} on" title="Stop from ${mo} on">⏹</button></td></tr>`})}
     </tbody></table><button class="add" data-act="addItem">+ Add recurring item</button></section>
   <section><h3>This month only</h3>
@@ -273,12 +290,12 @@ function dashboard(){
   const check=c=>!c.tone?'–':c.left===0?'Zero-based':c.left>0?`Assign ${usd(c.left)} more`:'Over budget';
   const goals=S.items.filter(it=>it.cat==='Savings & Goals');
   return `<h2>Dashboard <span data-c>${esc(S.year)}</span></h2>
-  <section><div class="cards" style="margin:0">
+  <details class="settings"><summary>⚙ Settings</summary><div class="cards" style="margin:10px 0 4px">
     <label>Your name ${inp('name',S.name,'Your name')}</label><label>Title ${inp('title',S.title,'Title')}</label>
-    <label>Year ${inp('year',S.year,'Year','number')}</label><label>View month ${sel('view',S.view,M,'View month').replace('<option></option>','')}</label></div></section>
-  <div class="cards">${card('Total net worth',netWorth())}${card('Income · '+S.view,v.inc)}${card('Spent + saved · '+S.view,v.total)}
-    ${card('Left to assign · '+S.view,v.left,v.tone)}${card('Savings rate · '+S.view,pct(v.rate))}</div>
-  <section><h3>Where the money goes · <span data-c>${S.view}</span></h3>${catWheel(v)}</section>
+    <label>Year ${inp('year',S.year,'Year','number')}</label><label>View month ${sel('view',S.view,M,'View month').replace('<option></option>','')}</label></div></details>
+  <div class="cards">${card('Total net worth',netWorth(),'','assets:')}${card('Income · '+S.view,v.inc,'',S.view+':income')}${card('Spent + saved · '+S.view,v.total,'',S.view+':spending')}
+    ${card('Left to assign · '+S.view,v.left,v.tone,S.view+':savings')}${card('Savings rate · '+S.view,pct(v.rate),'',S.view+':savings')}</div>
+  <section class="fit"><h3>Where the money goes · <span data-c>${S.view}</span></h3>${catWheel(v)}</section>
   <section><h3>Month by month</h3><table><thead><tr><th>Month</th><th class="n">Income</th><th class="n">Spent</th><th class="n">Saved</th><th class="n">Left to assign</th><th class="n">Savings rate</th><th>Zero-based check</th></tr></thead><tbody>
     ${all.map((c,i)=>`<tr><td><button class="x" style="color:var(--accent);font-size:14px" data-act="tab" data-k="${M[i]}">${M[i]}</button></td>${C(usd(c.inc))}
       ${C(usd(spent(c)))}${C(usd(c.cats['Savings & Goals']))}${C(usd(c.left))}${C(pct(c.rate))}${C(check(c),c.tone)}</tr>`).join('')}
@@ -326,25 +343,31 @@ function refresh(){
   const t=document.createElement('div');t.innerHTML=html();
   const a=app.querySelectorAll('[data-c]'),b=t.querySelectorAll('[data-c]');
   if(a.length!==b.length)return render();
-  a.forEach((el,i)=>{el.innerHTML=b[i].innerHTML;if(typeof el.className==='string')el.className=b[i].className;el.style.cssText=b[i].style.cssText});
+  a.forEach((el,i)=>{el.innerHTML=b[i].innerHTML;if(b[i].dataset.k)el.dataset.k=b[i].dataset.k;if(typeof el.className==='string')el.className=b[i].className;el.style.cssText=b[i].style.cssText});
   ttl.textContent=`${S.name} · ${S.title}`;
 }
 function focusKey(k){const el=k&&app.querySelector(`[data-k="${CSS.escape(k)}"]`);if(el){el.focus({preventScroll:false});return el}}
 
 // ===== 5. MONTH WHEEL (spins like a prize wheel, lands on a month) =====
-wheel.innerHTML=M.map(m=>`<button data-act="tab" data-k="${m}">${m}</button>`).join('');
+// Three copies of the months. After a spin it quietly hops back to the middle copy, so Dec loops to Jan forever.
+wheel.innerHTML=[0,1,2].flatMap(()=>M.map(m=>`<button data-act="tab" data-k="${m}">${m}</button>`)).join('');
 let spinning=false,settle,lastIdx=-1;
 function paintWheel(){
   const r=wheel.getBoundingClientRect(),mid=r.left+r.width/2;let best=0,bd=1e9;
-  [...wheel.children].forEach((b,i)=>{const br=b.getBoundingClientRect(),d=(br.left+br.width/2-mid)/br.width;
-    b.style.transform=`rotateY(${Math.max(-75,Math.min(75,-d*30))}deg) scale(${1-Math.min(Math.abs(d),3)*.1})`;
-    b.style.opacity=1-Math.min(Math.abs(d),3)*.2;if(Math.abs(d)<bd){bd=Math.abs(d);best=i}});
+  [...wheel.children].forEach((b,i)=>{const w=b.offsetWidth,br=b.getBoundingClientRect(),d=(br.left+br.width/2-mid)/w,a=Math.abs(d);
+    b.style.transform=`rotateY(${Math.max(-75,Math.min(75,-d*30))}deg) scale(${a<1?1.25-a*.4:Math.max(.85-(a-1)*.2,.5)})`;
+    b.style.opacity=Math.max(1-a*.25,.15);b.style.zIndex=a<.5?1:0;if(a<bd){bd=a;best=i}});
   return best;
 }
-const spinTo=(m,smooth)=>{const b=wheel.children[M.indexOf(m)];wheel.scrollTo({left:b.offsetLeft-(wheel.clientWidth-b.offsetWidth)/2,behavior:smooth?'smooth':'auto'})};
+const spinTo=(m,smooth)=>{
+  const cur=paintWheel(),opts=[0,12,24].map(o=>o+M.indexOf(m)),i=smooth?opts.reduce((a,b)=>Math.abs(b-cur)<Math.abs(a-cur)?b:a):opts[1],b=wheel.children[i];
+  wheel.scrollTo({left:b.offsetLeft-(wheel.clientWidth-b.offsetWidth)/2,behavior:smooth?'smooth':'auto'});
+};
 wheel.addEventListener('scroll',()=>{
   const i=paintWheel();if(spinning&&i!==lastIdx)navigator.vibrate?.(4);lastIdx=i;
-  clearTimeout(settle);settle=setTimeout(()=>{if(spinning){spinning=false;go(M[i],false)}},160);
+  clearTimeout(settle);settle=setTimeout(()=>{
+    if(i<12||i>=24)wheel.scrollLeft+=(i<12?12:-12)*(wheel.children[1].offsetLeft-wheel.children[0].offsetLeft);
+    if(spinning){spinning=false;go(M[i%12],false)}},160);
 },{passive:true});
 ['touchstart','pointerdown'].forEach(ev=>wheel.addEventListener(ev,()=>spinning=true,{passive:true}));
 wheel.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){e.preventDefault();wheel.scrollLeft+=e.deltaY}spinning=true},{passive:false});
@@ -354,18 +377,20 @@ function go(k,spin=true){
 }
 
 // ===== 6. BUTTONS & TYPING =====
-document.addEventListener('input',e=>{
+function onEdit(e){
   const k=e.target.dataset.k;if(!k)return;
-  const v=e.target.value,p=k.split('.'),field=p.pop(),base=p.join('.'),row=get(base);
+  const v=e.target.type==='checkbox'?(e.target.checked?'Done':''):e.target.value,p=k.split('.'),field=p.pop(),base=p.join('.'),row=get(base);
   if(p[0]==='items'&&field==='amount'&&M.includes(tab))freeze(row,M.indexOf(tab));
   set(k,v);
   if(row&&'cat' in row&&field==='cat'){row.manual=true;if(norm(row.name))S.learned[norm(row.name)]=v;e.target.style.setProperty('--dot',color(v));resort=true}
   if(row&&'cat' in row&&field==='name'&&!row.manual){const c=guess(v);
     if(c!==row.cat){row.cat=c;resort=true;const s=app.querySelector(`[data-k="${CSS.escape(base+'.cat')}"]`);if(s){s.value=c;s.style.setProperty('--dot',color(c))}}}
   save();refresh();
-});
+}
+document.addEventListener('input',onEdit);
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button]')){e.preventDefault();e.target.click()}});
 // After you finish typing a name, regroup so the entry sits under its category.
-document.addEventListener('change',()=>{if(!resort)return;resort=false;setTimeout(()=>{
+document.addEventListener('change',e=>{if(e.target.type==='checkbox')return onEdit(e);if(!resort)return;resort=false;setTimeout(()=>{
   const a=document.activeElement,k=a?.dataset?.k;let s=null;try{s=a.selectionStart}catch{}
   render();const el=focusKey(k);if(el&&s!=null)try{el.setSelectionRange(s,s)}catch{}},250)});
 document.addEventListener('click',e=>{
@@ -373,6 +398,10 @@ document.addEventListener('click',e=>{
   const {act,k}=btn.dataset,i=+btn.dataset.i,mi=M.indexOf(tab);
   if(act==='tab'){spinning=false;return go(k)}
   if(act==='cat'){selCat=selCat===k?null:k;spins++;return refresh()}
+  if(act==='jump'){const [to,sec]=k.split(':');spinning=false;go(to);
+    const el=app.querySelector(`[data-jump="${sec}"]`)||(M.includes(to)&&app.querySelector('[data-jump="recurring"]'));
+    if(!el)return scrollTo({top:0,behavior:'smooth'});
+    el.scrollIntoView({behavior:'smooth',block:'start'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');return}
   let focus;
   if(act==='add'){const list=get(k);list.push(k.endsWith('lines')?{name:'',cat:'Other',amount:'',date:'',status:''}:{name:'',value:'',notes:''});focus=`${k}.${list.length-1}.name`}
   else if(act==='addItem'){S.items.push({id:uid(),name:'',cat:'Other',amount:'',start:mi});focus=`items.${S.items.length-1}.name`}
@@ -389,20 +418,109 @@ document.getElementById('export').onclick=async()=>{
   const name=`budget-backup-${new Date().toISOString().slice(0,10)}.json`;
   const file=new File([JSON.stringify(S,null,2)],name,{type:'application/json'});
   // On phones, the share sheet lets you save to Files, Drive, email, etc.
-  if(navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:name});return}catch(e){if(e.name==='AbortError')return}}
-  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const done=()=>{D.last=Date.now();saveD();paintDrive()};
+  if(navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:name});return done()}catch(e){if(e.name==='AbortError')return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);done();
 };
+const isBackup=d=>d&&typeof d.months==='object'&&Array.isArray(d.assets)&&Array.isArray(d.liabilities)&&M.every(m=>d.months[m])
+  &&(Array.isArray(d.items)?M.every(m=>Array.isArray(d.months[m].lines)):Array.isArray(d.goals)&&M.every(m=>d.months[m].income&&d.months[m].expenses));
+function load(d){S=migrate(d);S.netWorth??={};S.learned??={};tab='dash';save();render();spinTo(S.view)}
 document.getElementById('import').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
-  try{const d=JSON.parse(await f.text());
-    const ok=d&&typeof d.months==='object'&&Array.isArray(d.assets)&&Array.isArray(d.liabilities)&&M.every(m=>d.months[m])
-      &&(Array.isArray(d.items)?M.every(m=>Array.isArray(d.months[m].lines)):Array.isArray(d.goals)&&M.every(m=>d.months[m].income&&d.months[m].expenses));
-    if(!ok)throw 0;
-    if(!confirm('Replace all current data with this backup?'))return;
-    S=migrate(d);S.netWorth??={};S.learned??={};tab='dash';save();render();spinTo(S.view);
+  try{const d=JSON.parse(await f.text());if(!isBackup(d))throw 0;
+    if(confirm('Replace all current data with this backup?'))load(d);
   }catch{alert('That file is not a budget backup.')}
   e.target.value='';
 };
+
+// ===== 7. GOOGLE DRIVE AUTO-BACKUP =====
+// Paste your OAuth Client ID between the quotes (see README). Left empty, Drive backup stays hidden.
+const GOOGLE_CLIENT_ID='558610090512-hq8fkco1b3r959t3lqb70l7dddmmjjt2.apps.googleusercontent.com';
+// Saves one file in the person's own Drive a few seconds after each change, only while the app is open.
+// drive.file scope = the app can only see files it created, nothing else in their Drive.
+const DKEY='zero-based-budget-drive',FILE='Zero-Based Budget backup.json',API='https://www.googleapis.com';
+let D={},dTimer;
+try{D=JSON.parse(localStorage.getItem(DKEY))||{}}catch{}
+const saveD=()=>{try{localStorage.setItem(DKEY,JSON.stringify(D))}catch{}};
+if(!D.first){D.first=Date.now();saveD()}  // backup reminder counts from first use
+const tokenOk=()=>!!D.token&&Date.now()<D.exp-60e3;
+const appUrl=()=>location.origin+location.pathname.replace(/index\.html$/,'');
+function connect(after=''){
+  D.state=Math.random().toString(36).slice(2);D.after=after;saveD();
+  location.href='https://accounts.google.com/o/oauth2/v2/auth?'+new URLSearchParams({client_id:GOOGLE_CLIENT_ID,redirect_uri:appUrl(),
+    response_type:'token',scope:'https://www.googleapis.com/auth/drive.file',include_granted_scopes:'true',state:D.state});
+}
+async function api(url,o={}){
+  const r=await fetch(url,{...o,headers:{...o.headers,Authorization:'Bearer '+D.token}});
+  if(r.status===401){D.token=null;saveD();throw 'auth'}
+  return r;
+}
+async function findFile(){
+  const r=await api(`${API}/drive/v3/files?`+new URLSearchParams({q:`name='${FILE}' and trashed=false`,orderBy:'modifiedTime desc',fields:'files(id,modifiedTime)',pageSize:'1'}));
+  return r.ok?(await r.json()).files[0]:null;
+}
+async function restoreFrom(id){
+  const r=await api(`${API}/drive/v3/files/${id}?alt=media`);const d=r.ok?await r.json().catch(()=>null):null;
+  if(!isBackup(d))return alert('The Drive backup could not be read.');
+  load(d);
+}
+function scheduleBackup(){if(!D.on)return;D.dirty=true;saveD();clearTimeout(dTimer);dTimer=setTimeout(backupNow,3000);paintDrive()}
+async function backupNow(keepalive=false){
+  clearTimeout(dTimer);if(!D.on||!tokenOk())return paintDrive();
+  const body=JSON.stringify(S);D.busy=true;paintDrive();
+  try{
+    let r;
+    if(D.fileId){r=await api(`${API}/upload/drive/v3/files/${D.fileId}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body,keepalive});
+      if(r.status===404)D.fileId=null}  // someone deleted it in Drive: make a new one
+    if(!D.fileId){const b='zbb'+Date.now();
+      r=await api(`${API}/upload/drive/v3/files?uploadType=multipart&fields=id`,{method:'POST',headers:{'Content-Type':`multipart/related; boundary=${b}`},
+        body:`--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name:FILE,mimeType:'application/json'})}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${b}--`});
+      if(r.ok)D.fileId=(await r.json()).id}
+    if(r.ok){D.dirty=false;D.last=Date.now();D.err=''}else D.err=`Drive said no (${r.status}). Will retry.`;
+  }catch(e){D.err=e==='auth'?'':'No connection. Will retry.'}
+  D.busy=false;saveD();paintDrive();
+}
+// Coming back from Google's sign-in page with a token in the address.
+async function handleRedirect(){
+  if(!/[#&](access_token|error)=/.test(location.hash))return;
+  const h=new URLSearchParams(location.hash.slice(1));history.replaceState(null,'',appUrl());
+  if(!D.state||h.get('state')!==D.state)return;
+  const after=D.after;delete D.state;delete D.after;
+  if(!h.get('access_token')){saveD();paintDrive();return alert('Google Drive backup was not turned on.')}
+  D.token=h.get('access_token');D.exp=Date.now()+(+h.get('expires_in')||3600)*1000;D.on=true;saveD();
+  try{
+    if(!D.fileId||after==='restore'){const f=await findFile();
+      // Never overwrite an existing Drive backup by surprise: ask first, and if they say no, start a separate file.
+      if(f&&confirm(`Found a backup in your Google Drive from ${new Date(f.modifiedTime).toLocaleString()}.\n\nOK = load it onto this device.\nCancel = keep this device's data (saved as a new Drive file; the old one stays).`)){D.fileId=f.id;saveD();await restoreFrom(f.id)}
+      else if(after==='restore'&&!f)alert('No backup found in this Google Drive yet.');
+    }
+  }catch{}
+  backupNow();
+}
+function paintDrive(){
+  const el=document.getElementById('drive'),ban=document.getElementById('banner');
+  const ago=t=>{const m=Math.round((Date.now()-t)/6e4);return m<1?'just now':m<60?`${m} min ago`:m<1440?`${Math.round(m/60)} hr ago`:`${Math.round(m/1440)} days ago`};
+  el.innerHTML=!GOOGLE_CLIENT_ID?'':!D.on?`<button data-drive="on">☁ Turn on Google Drive backup</button>`
+    :`<span>☁ Drive backup on · ${D.busy?'saving…':!tokenOk()&&D.dirty?'paused, reconnect to save':D.dirty?'saving soon…':D.last?'saved '+ago(D.last):'connected'}${D.err?' · '+esc(D.err):''}</span>
+      <button data-drive="restore">Restore from Drive</button><button data-drive="off">Turn off</button>`;
+  const days=(Date.now()-(D.last||D.first))/864e5;
+  ban.innerHTML=D.on&&D.dirty&&!tokenOk()?`<div>☁ Your changes aren't backed up yet. Google sign-in expired. <button class="go" data-drive="reconnect">Reconnect</button></div>`
+    :!D.on&&days>=7&&Date.now()>(D.snooze||0)?`<div>It's been ${D.last?Math.floor(days)+' days since your last backup':'a while and you haven\'t backed up yet'}.
+      ${GOOGLE_CLIENT_ID?'<button class="go" data-drive="on">☁ Turn on Drive backup</button>':''}<button data-drive="export">Export backup</button><button data-drive="snooze">Later</button></div>`:'';
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-drive]')?.dataset.drive;if(!a)return;
+  if(a==='on'){if(confirm('Back up automatically to your Google Drive?\n\nThe app saves one file, "'+FILE+'", in your own Drive a few seconds after each change while the app is open. It can\'t see anything else in your Drive.\n\nYou\'ll sign in with Google next.'))connect()}
+  else if(a==='reconnect')connect();
+  else if(a==='restore'){if(tokenOk()&&D.fileId){if(confirm('Replace this device\'s data with the Drive backup?'))restoreFrom(D.fileId).catch(()=>connect('restore'))}else connect('restore')}
+  else if(a==='off'){if(confirm('Turn off Drive backup? The backup file stays in your Drive.')){D={first:D.first,last:D.last};saveD();paintDrive()}}
+  else if(a==='export')document.getElementById('export').click();
+  else if(a==='snooze'){D.snooze=Date.now()+864e5;saveD();paintDrive()}
+});
+// Save right away when the app is put away, and retry when the connection comes back. No timers run while it's closed.
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&D.dirty)backupNow(true)});
+addEventListener('online',()=>D.dirty&&backupNow());
+setInterval(()=>D.on&&paintDrive(),60e3); // refreshes "saved N min ago"; does nothing in the background
 
 // Self-checks: the spreadsheet's October numbers, the keyword guesser, and recurring math.
 {const s=S;S=seed();const c=calc(9);
@@ -412,7 +530,7 @@ document.getElementById('import').onchange=async e=>{
  console.assert(calc(4).cats.Housing===1000&&calc(5).cats.Housing===1200&&calc(1).cats.Housing===0,'recurring self-check failed');
  S=s;}
 
-render();spinTo(S.view);paintWheel();
+render();spinTo(S.view);paintWheel();paintDrive();handleRedirect();if(D.dirty)backupNow();
 navigator.storage?.persist?.(); // asks the phone not to clear app data when space runs low
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
