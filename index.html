@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zero-Based Budget</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="theme-color" content="#2f5bd3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Budget">
+<style>
+:root{--bg:#f6f5f1;--panel:#fff;--ink:#1d1d1f;--muted:#6b6b70;--line:#e3e1db;--accent:#2f5bd3;--ok:#2e8b57;--warn:#b7791f;--bad:#c53030;--input:#eef3ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--panel:#1e1e21;--ink:#ececef;--muted:#9a9aa2;--line:#2e2e33;--accent:#7b9cff;--ok:#5cc28a;--warn:#e0b04f;--bad:#f07272;--input:#23283a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:calc(16px + env(safe-area-inset-top)) 16px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{margin:0 0 10px;font-size:18px}
+nav{display:flex;flex-wrap:wrap;gap:4px}
+nav button{border:1px solid var(--line);background:none;color:var(--ink);padding:5px 10px;border-radius:6px;cursor:pointer;font:inherit}
+nav button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+main{max-width:1100px;margin:0 auto;padding:16px}
+h2{margin:4px 0 4px;font-size:22px}
+h3{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin:14px 0;overflow-x:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:12px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.card span{display:block;color:var(--muted);font-size:12px}
+.card b{font-size:22px;font-variant-numeric:tabular-nums}
+.ok b,.ok{color:var(--ok)}.warn b,.warn{color:var(--warn)}.bad b,.bad{color:var(--bad)}
+.msg{font-weight:600;margin:0}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;padding:4px 6px;border-bottom:1px solid var(--line)}
+td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:700;border-bottom:0}
+input,select{width:100%;min-width:90px;font:inherit;color:var(--ink);background:var(--input);border:1px solid transparent;border-radius:5px;padding:4px 6px}
+input[type=number]{text-align:right}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px}
+.x:hover{color:var(--bad)}
+.add{margin-top:8px;border:1px dashed var(--line);background:none;color:var(--accent);padding:5px 10px;border-radius:6px;cursor:pointer;font:inherit}
+.bar{height:8px;background:var(--line);border-radius:4px;min-width:80px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok)}
+.chart{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:160px;padding-top:8px}
+.chart div{display:flex;gap:2px;align-items:end;height:100%;position:relative}
+.chart i{flex:1;background:var(--accent);border-radius:3px 3px 0 0;min-height:1px}
+.chart i+i{background:var(--warn)}
+.chart small{position:absolute;bottom:-18px;left:0;right:0;text-align:center;color:var(--muted);font-size:11px}
+.legend{margin-top:24px;font-size:12px;color:var(--muted)}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:middle}
+footer{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:12px;padding:0 16px 24px;max-width:1100px;margin:0 auto}
+footer button,footer label{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:5px 10px;border-radius:6px;cursor:pointer;font:inherit}
+</style>
+</head>
+<body>
+<header id="top"></header>
+<main id="app"></main>
+<footer>
+  <button id="export">Export backup</button>
+  <label>Import backup <input id="import" type="file" accept="application/json" hidden></label>
+  <span>Data is saved in this browser only. Export a backup now and then.</span>
+</footer>
+<script>
+const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CATS={Housing:['Cleaning','Electric','Insurance','Internet','Water','Parking Fee','Rent','TV Subscription','Other'],
+  Personal:['Groceries','School Loans','Shopping','Outing','Cleaning','Other'],
+  Transportation:['Gas','Vehicle Insurance','Maintenance','Parking','Installment','Registration','Toll','Other']};
+const KEY='zero-based-budget-v1';
+const xl=s=>new Date(Date.UTC(1899,11,30)+s*864e5).toISOString().slice(0,10); // Excel serial date -> ISO
+const n=v=>+v||0, r2=v=>Math.round(v*100)/100;
+const sum=rows=>r2(rows.reduce((a,r)=>a+n(r.amount),0));
+const usd=v=>v.toLocaleString('en-US',{style:'currency',currency:'USD'});
+const pct=v=>(v*100).toFixed(1)+'%';
+const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>`&#${ch.charCodeAt(0)};`);
+
+const blankMonth=()=>({income:[{type:'Main',source:'',amount:'',date:'',status:''}],
+  expenses:Object.fromEntries(Object.entries(CATS).map(([c,subs])=>[c,subs.map(sub=>({sub,amount:'',date:'',status:''}))])),goals:{}});
+
+// Data copied from the spreadsheet so the app starts where the sheet left off.
+function seed(){
+  const S={name:'Justin',title:'Zero-Based Budget',year:'2026',view:'Oct',months:{},netWorth:{Oct:'0'},
+    goals:[['Emergency Fund',46568],['Retirement Investing',51501],['Vacation Fund',46538],['Home Down Payment',47118],['New Car',47299]]
+      .map(([name,d],i)=>({id:'g'+i,name,target:'',date:xl(d),notes:''})),
+    assets:[['Gold'],['Stock'],['Real Estate'],['Land'],['Partnership 1'],['Crypto currency'],['TCG','9912','Gathered from Collectr']]
+      .map(([name,value='',notes=''])=>({name,value,notes})),
+    liabilities:[{name:'Credit Card',value:'',notes:'Not sure if CC is totaled here since its paid in full always.'},{name:'Car Loan',value:'',notes:''}]};
+  M.forEach(m=>S.months[m]=blankMonth());
+  S.months.Sep.income[0].amount='2000';
+  S.months.Sep.goals.g0={amount:'2000',date:'',status:''};
+  const o=S.months.Oct;
+  o.income=[['Main','Salary bi weekly payment',1124.2,46297],['Main','Salary bi weekly payment',1124.21,46311],
+    ['Side','Salary bi weekly payment',1124.21,46324],['Side','Card Cleaning',98,46300]]
+    .map(([type,source,amount,d])=>({type,source,amount:String(amount),date:xl(d),status:'Received'}));
+  const fill=(cat,rows)=>rows.forEach(([a,d],i)=>Object.assign(o.expenses[cat][i],{amount:String(a),date:xl(d),status:'Paid'}));
+  fill('Housing',[[0,46296],[50,46304],[21,46298],[0,46299],[0,46301],[0,46302],[0,46301],[0,46302],[0,46303]]);
+  fill('Personal',[[200,46297],[0,46304],[0,46299],[0,46300],[0,46301]]);
+  fill('Transportation',[[174,46302],[281,46298],[0,46299],[0,46301],[0,46302],[0,46303],[0,46304],[0,46309]]);
+  [[46305,'Paid'],[46305,'Paid'],[46323,'Paid'],[46323,'Paid'],[46320,'Upcoming']]
+    .forEach(([d,status],i)=>o.goals['g'+i]={amount:'0',date:xl(d),status});
+  return S;
+}
+
+function calc(m){
+  const cats={};
+  for(const c in CATS)cats[c]=sum(m.expenses[c]||[]);
+  cats['Savings & Goals']=r2(S.goals.reduce((a,g)=>a+n(m.goals[g.id]?.amount),0));
+  const inc=sum(m.income),total=r2(Object.values(cats).reduce((a,b)=>a+b,0)),left=r2(inc-total);
+  const tone=!inc&&!total?'':left===0?'ok':left>0?'warn':'bad';
+  return {inc,cats,total,left,tone,rate:inc?cats['Savings & Goals']/inc:0};
+}
+const msg=c=>!c.tone?'Start by typing your income, then give every dollar a job':c.left===0?'Zero-based: every dollar has a job'
+  :c.left>0?`Assign ${usd(c.left)} more to reach $0.00`:`Over budget by ${usd(-c.left)}. Trim an expense.`;
+const goalSaved=id=>r2(M.reduce((a,m)=>a+n(S.months[m].goals[id]?.amount),0));
+const totalOf=rows=>r2(rows.reduce((a,r)=>a+n(r.value),0));
+const netWorth=()=>r2(totalOf(S.assets)-totalOf(S.liabilities));
+
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch{}
+S??=seed();
+let tab=S.view;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch{}};
+
+const get=k=>k.split('.').reduce((o,p)=>o[p],S);
+function set(k,v){const p=k.split('.'),last=p.pop();let o=S;for(const x of p)o=o[x]??={};o[last]=v}
+
+// UI helpers. data-c marks computed output that refreshes while you type.
+const inp=(k,v,label,type='text')=>`<input data-k="${k}" type="${type}" value="${esc(v)}" aria-label="${esc(label)}"${type==='number'?' step="0.01" inputmode="decimal"':''}>`;
+const sel=(k,v,opts,label)=>`<select data-k="${k}" aria-label="${esc(label)}">${['',...opts].map(o=>`<option${o===v?' selected':''}>${o}</option>`).join('')}</select>`;
+const del=(k,i,label)=>`<button class="x" data-act="del" data-k="${k}" data-i="${i}" aria-label="Remove ${esc(label)}">×</button>`;
+const add=(k,label)=>`<button class="add" data-act="add" data-k="${k}">+ ${label}</button>`;
+const card=(label,v,cls='')=>`<div class="card ${cls}" data-c><span>${label}</span><b>${typeof v==='number'?usd(v):v}</b></div>`;
+const bar=p=>`<div class="bar"><i data-c style="width:${Math.min(Math.max(p,0),1)*100}%"></i></div>`;
+const C=(v,cls='n')=>`<td class="${cls}" data-c>${v}</td>`;
+
+function monthView(mo){
+  const m=S.months[mo],c=calc(m),b=`months.${mo}`;
+  const lines=(cat,rows)=>`<section><h3>${cat}</h3><table><thead><tr><th>Sub-category</th><th class="n">Amount</th><th>Bill due date</th><th>Status</th><th></th></tr></thead><tbody>
+    ${rows.map((r,i)=>`<tr><td>${inp(`${b}.expenses.${cat}.${i}.sub`,r.sub,'Sub-category')}</td><td>${inp(`${b}.expenses.${cat}.${i}.amount`,r.amount,r.sub+' amount','number')}</td>
+      <td>${inp(`${b}.expenses.${cat}.${i}.date`,r.date,r.sub+' due date','date')}</td><td>${sel(`${b}.expenses.${cat}.${i}.status`,r.status,['Paid','Upcoming'],r.sub+' status')}</td><td>${del(`${b}.expenses.${cat}`,i,r.sub)}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td>${C(usd(c.cats[cat]))}<td colspan="3"></td></tr></tfoot></table>${add(`${b}.expenses.${cat}`,'Add line')}</section>`;
+  return `<h2>${FULL[M.indexOf(mo)]} <span data-c>${esc(S.year)}</span></h2>
+  <p class="msg ${c.tone}" data-c>${msg(c)}</p>
+  <div class="cards">${card('Total income',c.inc)}${card('Expenses + savings',c.total)}${card('Left to assign (goal: $0.00)',c.left,c.tone)}</div>
+  <section><h3>Income</h3><table><thead><tr><th>Type</th><th>Source</th><th class="n">Amount</th><th>Date received</th><th>Status</th><th></th></tr></thead><tbody>
+    ${m.income.map((r,i)=>`<tr><td>${sel(`${b}.income.${i}.type`,r.type,['Main','Side'],'Income type')}</td><td>${inp(`${b}.income.${i}.source`,r.source,'Income source')}</td>
+      <td>${inp(`${b}.income.${i}.amount`,r.amount,'Income amount','number')}</td><td>${inp(`${b}.income.${i}.date`,r.date,'Date received','date')}</td>
+      <td>${sel(`${b}.income.${i}.status`,r.status,['Received','Pending'],'Income status')}</td><td>${del(`${b}.income`,i,'income line')}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td colspan="2">Total income</td>${C(usd(c.inc))}<td colspan="3"></td></tr></tfoot></table>${add(`${b}.income`,'Add income')}</section>
+  <div class="grid">${Object.keys(CATS).map(cat=>lines(cat,m.expenses[cat])).join('')}
+  <section><h3>Savings &amp; Goals</h3><table><thead><tr><th>Goal</th><th class="n">Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>
+    ${S.goals.map(g=>{const r=m.goals[g.id]||{},k=`${b}.goals.${g.id}`;return `<tr><td>${esc(g.name)}</td><td>${inp(k+'.amount',r.amount,g.name+' amount','number')}</td>
+      <td>${inp(k+'.date',r.date,g.name+' date','date')}</td><td>${sel(k+'.status',r.status,['Paid','Upcoming'],g.name+' status')}</td></tr>`}).join('')}
+    </tbody><tfoot><tr><td>Total</td>${C(usd(c.cats['Savings & Goals']))}<td colspan="2"></td></tr></tfoot></table>
+    <p style="color:var(--muted);font-size:12px">Rename or add goals on the Assets &amp; Goals tab.</p></section></div>
+  <section><h3>Spending by category</h3><table><thead><tr><th>Category</th><th class="n">Amount</th><th class="n">% of income</th><th></th></tr></thead><tbody>
+    ${Object.entries(c.cats).map(([k,v])=>`<tr><td>${k}</td>${C(usd(v))}${C(pct(c.inc?v/c.inc:0))}<td>${bar(c.inc?v/c.inc:0)}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td>${C(usd(c.total))}${C(pct(c.inc?c.total/c.inc:0))}<td></td></tr></tfoot></table></section>`;
+}
+
+function dashboard(){
+  const all=M.map(m=>calc(S.months[m])),v=all[M.indexOf(S.view)];
+  const yr=k=>r2(all.reduce((a,c)=>a+(k(c)),0)),yInc=yr(c=>c.inc),ySav=yr(c=>c.cats['Savings & Goals']);
+  const max=Math.max(1,...all.flatMap(c=>[c.inc,c.total]));
+  const check=c=>!c.tone?'–':c.left===0?'Zero-based':c.left>0?`Assign ${usd(c.left)} more`:'Over budget';
+  return `<h2>Dashboard <span data-c>${esc(S.year)}</span></h2>
+  <section><div class="cards" style="margin:0">
+    <label>Your name ${inp('name',S.name,'Your name')}</label><label>Title ${inp('title',S.title,'Title')}</label>
+    <label>Year ${inp('year',S.year,'Year','number')}</label><label>View month ${sel('view',S.view,M,'View month').replace('<option></option>','')}</label></div></section>
+  <div class="cards">${card('Total net worth',netWorth())}${card('Income · '+S.view,v.inc)}${card('Expenses + savings · '+S.view,v.total)}
+    ${card('Left to assign · '+S.view,v.left,v.tone)}${card('Savings rate · '+S.view,pct(v.rate))}</div>
+  <section><h3>Month by month</h3><table><thead><tr><th>Month</th><th class="n">Income</th>${Object.keys(CATS).map(k=>`<th class="n">${k}</th>`).join('')}
+    <th class="n">Savings &amp; Goals</th><th class="n">Total expenses</th><th class="n">Left to assign</th><th class="n">Savings rate</th><th>Zero-based check</th></tr></thead><tbody>
+    ${all.map((c,i)=>`<tr><td><button class="x" style="color:var(--accent);font-size:14px" data-act="tab" data-k="${M[i]}">${M[i]}</button></td>${C(usd(c.inc))}
+      ${Object.values(c.cats).map(x=>C(usd(x))).join('')}${C(usd(c.total))}${C(usd(c.left))}${C(pct(c.rate))}${C(check(c),c.tone)}</tr>`).join('')}
+    </tbody><tfoot><tr><td>Year</td>${C(usd(yInc))}${Object.keys(all[0].cats).map(k=>C(usd(yr(c=>c.cats[k])))).join('')}
+      ${C(usd(yr(c=>c.total)))}${C(usd(yr(c=>c.left)))}${C(pct(yInc?ySav/yInc:0))}<td></td></tr></tfoot></table></section>
+  <div class="grid">
+  <section><h3>Income vs expenses by month</h3><div class="chart">${all.map((c,i)=>`<div><i data-c style="height:${c.inc/max*100}%" title="Income ${usd(c.inc)}"></i><i data-c style="height:${c.total/max*100}%" title="Expenses ${usd(c.total)}"></i><small>${M[i]}</small></div>`).join('')}</div>
+    <div class="legend"><b style="background:var(--accent)"></b>Income<b style="background:var(--warn)"></b>Expenses + savings</div></section>
+  <section><h3>Spending mix · <span data-c>${S.view}</span></h3><table><thead><tr><th>Category</th><th class="n">Amount</th><th class="n">% of income</th><th></th></tr></thead><tbody>
+    ${Object.entries(v.cats).map(([k,x])=>`<tr><td>${k}</td>${C(usd(x))}${C(pct(v.inc?x/v.inc:0))}<td>${bar(v.inc?x/v.inc:0)}</td></tr>`).join('')}</tbody></table></section>
+  <section><h3>Goal progress</h3><table><thead><tr><th>Goal</th><th class="n">Saved</th><th class="n">Target</th><th></th></tr></thead><tbody>
+    ${S.goals.map(g=>{const s=goalSaved(g.id),t=n(g.target);return `<tr><td>${esc(g.name)}</td>${C(usd(s))}${C(t?usd(t):'–')}<td>${bar(t?s/t:0)}</td></tr>`}).join('')}</tbody></table></section>
+  </div>`;
+}
+
+function assetsView(){
+  const ta=totalOf(S.assets),tl=totalOf(S.liabilities);
+  const list=(key,label,valLabel)=>`<section><h3>${label}</h3><table><thead><tr><th>${label.replace(/ies$/,'y').replace(/s$/,'')}</th><th class="n">${valLabel}</th>${key==='assets'?'<th class="n">% of total</th>':''}<th>Notes</th><th></th></tr></thead><tbody>
+    ${S[key].map((r,i)=>`<tr><td>${inp(`${key}.${i}.name`,r.name,'Name')}</td><td>${inp(`${key}.${i}.value`,r.value,r.name+' '+valLabel,'number')}</td>
+      ${key==='assets'?C(pct(ta?n(r.value)/ta:0)):''}<td>${inp(`${key}.${i}.notes`,r.notes,r.name+' notes')}</td><td>${del(key,i,r.name)}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td>${C(usd(totalOf(S[key])))}<td colspan="3"></td></tr></tfoot></table>${add(key,'Add '+label.toLowerCase().replace(/ies$/,'y').replace(/s$/,''))}</section>`;
+  return `<h2>Assets &amp; Goals <span data-c>${esc(S.year)}</span></h2>
+  <div class="cards">${card('Total assets',ta)}${card('Total liabilities',tl)}${card('Current net worth',netWorth(),netWorth()<0?'bad':'')}</div>
+  <div class="grid">${list('assets','Assets','Value')}${list('liabilities','Liabilities','Balance')}</div>
+  <section><h3>Goals</h3><p style="color:var(--muted);margin-top:0">Goals appear under Savings &amp; Goals in every month. "Saved" adds up what you put into each one.</p>
+    <table><thead><tr><th>Goal</th><th class="n">Target</th><th class="n">Saved</th><th class="n">Remaining</th><th>% complete</th><th>Target date</th><th>Status</th><th>Notes</th><th></th></tr></thead><tbody>
+    ${S.goals.map((g,i)=>{const s=goalSaved(g.id),t=n(g.target),st=!t?'No target':s>=t?'Reached':s>0?'In progress':'Not started';
+      return `<tr><td>${inp(`goals.${i}.name`,g.name,'Goal name')}</td><td>${inp(`goals.${i}.target`,g.target,g.name+' target','number')}</td>${C(usd(s))}${C(usd(Math.max(t-s,0)))}
+      <td>${bar(t?s/t:0)}<small data-c>${pct(t?Math.min(s/t,1):0)}</small></td><td>${inp(`goals.${i}.date`,g.date,g.name+' target date','date')}</td>
+      ${C(st,st==='Reached'?'ok':'')}<td>${inp(`goals.${i}.notes`,g.notes,g.name+' notes')}</td><td>${del('goals',i,g.name)}</td></tr>`}).join('')}
+    </tbody></table>${add('goals','Add goal')}</section>
+  <section><h3>Net worth by month</h3><table><thead><tr><th>Month</th><th class="n">Net worth (month-end)</th><th class="n">Change</th><th class="n">Saved to goals</th></tr></thead><tbody>
+    ${M.map((m,i)=>{const nw=S.netWorth[m]??'',prev=S.netWorth[M[i-1]]??'';
+      return `<tr><td>${m}</td><td>${inp('netWorth.'+m,nw,m+' net worth','number')}</td>${C(nw!==''&&prev!==''?usd(r2(n(nw)-n(prev))):'')}${C(usd(calc(S.months[m]).cats['Savings & Goals']))}</tr>`}).join('')}
+    </tbody></table></section>`;
+}
+
+const html=()=>tab==='dash'?dashboard():tab==='assets'?assetsView():monthView(tab);
+function render(){
+  document.title=`${S.name} · ${S.title}`;
+  hdr.innerHTML=`<h1 data-c>${esc(S.name)} · ${esc(S.title)}</h1><nav>${[['dash','Dashboard'],...M.map(m=>[m,m]),['assets','Assets & Goals']]
+    .map(([k,l])=>`<button data-act="tab" data-k="${k}" class="${tab===k?'on':''}">${esc(l)}</button>`).join('')}</nav>`;
+  app.innerHTML=html();
+}
+// Update computed cells in place so typing never loses focus.
+function refresh(){
+  const t=document.createElement('div');t.innerHTML=html();
+  const a=app.querySelectorAll('[data-c]'),b=t.querySelectorAll('[data-c]');
+  if(a.length!==b.length)return render();
+  a.forEach((el,i)=>{el.innerHTML=b[i].innerHTML;el.className=b[i].className;el.style.cssText=b[i].style.cssText});
+  hdr.querySelector('h1').textContent=`${S.name} · ${S.title}`;
+}
+const hdr=document.getElementById('top'),app=document.getElementById('app');
+
+document.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;set(k,e.target.value);save();refresh()});
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-act]');if(!btn)return;
+  const {act,k,i}=btn.dataset;
+  if(act==='tab'){tab=k;if(M.includes(k))S.view=k}
+  else if(act==='add'){const list=get(k),last=k.split('.').pop();
+    list.push(last==='income'?{type:'Side',source:'',amount:'',date:'',status:''}
+      :last==='goals'?{id:'g'+Date.now().toString(36),name:'New goal',target:'',date:'',notes:''}
+      :last==='assets'||last==='liabilities'?{name:'',value:'',notes:''}:{sub:'',amount:'',date:'',status:''})}
+  else if(act==='del'){if(k==='goals'&&!confirm(`Delete goal "${S.goals[i].name}"? Its monthly amounts stop counting.`))return;get(k).splice(+i,1)}
+  save();render();
+});
+document.getElementById('export').onclick=async()=>{
+  const name=`budget-backup-${new Date().toISOString().slice(0,10)}.json`;
+  const file=new File([JSON.stringify(S,null,2)],name,{type:'application/json'});
+  // On phones, the share sheet lets you save to Files, Drive, email, etc.
+  if(navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:name});return}catch(e){if(e.name==='AbortError')return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+document.getElementById('import').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const d=JSON.parse(await f.text());
+    if(!d||typeof d.months!=='object'||!M.every(m=>d.months[m]?.income&&d.months[m]?.expenses)||!Array.isArray(d.goals)||!Array.isArray(d.assets)||!Array.isArray(d.liabilities))throw 0;
+    if(!confirm('Replace all current data with this backup?'))return;
+    S=d;S.netWorth??={};tab='dash';save();render();
+  }catch{alert('That file is not a budget backup.')}
+  e.target.value='';
+};
+
+// Self-check against the spreadsheet's October numbers.
+{const s=S;S=seed();const c=calc(S.months.Oct);S=s;
+ console.assert(c.inc===3470.62&&c.total===726&&c.left===2744.62&&c.cats.Transportation===455,'calc self-check failed',c);}
+tab='dash';render();
+navigator.storage?.persist?.(); // asks the phone not to clear app data when space runs low
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
