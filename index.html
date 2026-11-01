@@ -70,6 +70,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
 .add{margin-top:8px;border:1px dashed var(--line);background:none;color:var(--accent);padding:8px 12px;border-radius:6px;cursor:pointer;font:inherit}
 .bar{height:8px;background:var(--line);border-radius:4px;min-width:80px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--ok);border-radius:4px}
+.bar i.warn{background:var(--warn)}.bar i.bad{background:var(--bad)}
 .chart{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:160px;padding-top:8px}
 .chart div{display:flex;gap:2px;align-items:end;height:100%;position:relative}
 .chart i{flex:1;background:var(--c1);border-radius:4px 4px 0 0;min-height:1px}
@@ -124,7 +125,7 @@ footer button,footer label,.banner button{border:1px solid var(--line);backgroun
   <label>Import backup <input id="import" type="file" accept="application/json,.json" hidden></label>
   <label>Import bank CSV <input id="bank" type="file" accept=".csv,text/csv" hidden></label>
   <span>Data is saved on this device, plus your own Google Drive if Drive backup is on.</span>
-  <span>App version 2026.10.29-5 <!-- change this date each time you upload a new version --></span>
+  <span>App version 2026.11.01-1 <!-- change this date each time you upload a new version --></span>
 </footer>
 <script>
 // ===== 2. CATEGORIES: names, colors (--c1..--c8 above) and the words that pick them =====
@@ -216,21 +217,22 @@ const netWorth=()=>r2(totalOf(S.assets)-totalOf(S.liabilities));
 function freeze(it,mi){for(let i=it.start;i<mi;i++){const r=S.months[M[i]].rec[it.id]??={};if(r.amount==null||r.amount==='')r.amount=String(n(it.amount))}}
 
 try{const d=JSON.parse(localStorage.getItem(KEY));if(d)S=migrate(d)}catch{}
-S??=seed();
+S??=seed();S.allow??={};
 let tab='dash',selCat=null,spins=0,resort=false;
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch{}scheduleBackup()};
 const get=k=>k.split('.').reduce((o,p)=>o?.[p],S);
 function set(k,v){const p=k.split('.'),last=p.pop();let o=S;for(const x of p)o=o[x]??={};o[last]=v}
 
 // ===== 4. SCREENS. data-c marks numbers that refresh while you type =====
-const inp=(k,v,label,type='text',ph='')=>`<input data-k="${k}" type="${type}" value="${esc(v)}" placeholder="${esc(ph)}" aria-label="${esc(label)}"${type==='number'?' step="0.01" inputmode="decimal"':''}>`;
+// Money always shows cents (every number box except Year is money).
+const money=(k,v)=>k!=='year'&&v!==''&&v!=null&&!isNaN(v)?n(v).toFixed(2):v;
+const inp=(k,v,label,type='text',ph='')=>`<input data-k="${k}" type="${type}" value="${esc(type==='number'?money(k,v):v)}" placeholder="${esc(ph)}" aria-label="${esc(label)}"${type==='number'?' step="0.01" inputmode="decimal"':''}>`;
 const sel=(k,v,opts,label)=>`<select data-k="${k}" aria-label="${esc(label)}">${['',...opts].map(o=>`<option${o===v?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
 const catSel=(k,v)=>sel(k,v,CATS,'Category').replace('<select','<select class="cat" style="--dot:'+color(v)+'"').replace('<option></option>','');
-const status=(k,v,label)=>sel(k,v,['Done','Upcoming'],label);
 const del=(k,i,label)=>`<button class="x" data-act="del" data-k="${k}" data-i="${i}" aria-label="Remove ${esc(label)}">×</button>`;
 // jump = "Month:section" (or "assets:"), so tapping the card takes you there.
 const card=(label,v,cls='',jump)=>`<div class="card ${cls}" data-c${jump?` data-act="jump" data-k="${jump}" role="button" tabindex="0"`:''}><span>${label}</span><b>${typeof v==='number'?usd(v):v}</b></div>`;
-const bar=p=>`<div class="bar"><i data-c style="width:${Math.min(Math.max(p,0),1)*100}%"></i></div>`;
+const bar=(p,cls='')=>`<div class="bar"><i data-c class="${cls}" style="width:${Math.min(Math.max(p,0),1)*100}%"></i></div>`;
 const C=(v,cls='n')=>`<td class="${cls}" data-c>${v}</td>`;
 const grp=(cat,cols)=>`<tr class="grp"${cat==='Income'?' data-jump="income"':cat==='Savings & Goals'?' data-jump="savings"':''}><td colspan="${cols}"><span class="dot" style="background:${color(cat)}"></span>${cat}</td></tr>`;
 // Rows shown grouped by category, so an entry moves to its category once it's named.
@@ -255,6 +257,21 @@ function catWheel(c){
     <div class="catlist" data-c>${parts.map(p=>`<button data-act="cat" data-k="${esc(p.k)}" class="${p.k===selCat?'on':''}"><span class="dot" style="background:${color(p.k)}"></span>${esc(p.k)}<b>${usd(p.v)}</b></button>`).join('')||'<span class="hint">Spending shows up here by category.</span>'}</div></div>`;
 }
 
+// Allowances: a monthly spending limit per category. "Monthly" repeats every month; "This month" changes just one.
+function allowSec(mi,month){
+  const mo=M[mi],c=calc(mi),ov=S.months[mo].allow||{},free=EXP.filter(k=>!(k in S.allow));
+  const rows=Object.keys(S.allow).sort((a,b)=>EXP.indexOf(a)-EXP.indexOf(b)).map(k=>{
+    const o=ov[k],lim=n(o==null||o===''?S.allow[k]:o),sp=c.cats[k]??0,left=r2(lim-sp),tone=left<0?'bad':sp>=lim*.9?'warn':'ok';
+    return `<tr><td><span class="dot" style="background:${color(k)}"></span>${esc(k)}</td>${C(left<0?'Over '+usd(-left):usd(left),'n '+tone)}<td>${bar(lim?sp/lim:sp?1:0,tone)}</td>${C(usd(sp))}
+      <td>${inp('allow.'+k,S.allow[k],k+' monthly allowance','number','0.00')}</td>
+      ${month?`<td>${inp(`months.${mo}.allow.${k}`,o,k+' allowance this month only','number',money('',S.allow[k])||'0.00')}</td>`:''}
+      <td><button class="x" data-act="delAllow" data-k="${esc(k)}" aria-label="Remove ${esc(k)} allowance">×</button></td></tr>`}).join('');
+  return `<section data-jump="allowance"><h3>Allowances · ${mo}</h3>
+    <p class="hint">${rows?'Your spending limit for each category. "Spent" counts everything in that category this month, recurring and one-time.'+(month?' Use "This month" when one month gets a different limit.':''):'Give yourself a monthly limit for a category, like $200 for Food. It repeats every month.'}</p>
+    ${rows?`<table><thead><tr><th>Category</th><th class="n">Left</th><th></th><th class="n">Spent</th><th class="n">Monthly</th>${month?'<th class="n">This month</th>':''}<th></th></tr></thead><tbody>${rows}</tbody></table>`:''}
+    ${free.length?`<select id="allowCat" aria-label="Category for a new allowance">${free.map(k=>`<option>${esc(k)}</option>`).join('')}</select> <button class="add" data-act="addAllow">+ Add allowance</button>`:''}</section>`;
+}
+
 function monthView(mo){
   const mi=M.indexOf(mo),m=S.months[mo],c=calc(mi),b=`months.${mo}`;
   const recRows=S.items.map((r,i)=>({r,i})).filter(x=>active(x.r,mi));
@@ -263,6 +280,7 @@ function monthView(mo){
   <p class="msg ${c.tone}" data-c>${msg(c)}</p>
   <div class="cards">${card('Income',c.inc,'',mo+':income')}${card('Spent + saved',c.total,'',mo+':spending')}${card('Left to assign',c.left,c.tone,mo+':savings')}</div>
   <section class="fit" data-jump="spending"><h3>Where the money goes</h3>${catWheel(c)}</section>
+  ${allowSec(mi,true)}
   <section data-jump="recurring"><h3>Every month (recurring)</h3>
     <p class="hint">These show up in every month from here on. Change "Usual" and it updates this month and later ones. Use "This month" when one month is different.</p>
     <table><thead><tr><th>Name</th><th>Category</th><th class="n">Usual</th><th class="n">This month</th><th>Due date</th><th>Paid?</th><th></th></tr></thead><tbody>
@@ -275,10 +293,10 @@ function monthView(mo){
     </tbody></table><button class="add" data-act="addItem">+ Add recurring item</button></section>
   <section><h3>This month only</h3>
     <p class="hint">One-time income or spending (like chips). Just type what it is and the app picks the category. Change it if it's wrong and it will remember. ↻ makes an entry recurring.</p>
-    <table><thead><tr><th>Name</th><th>Category</th><th class="n">Amount</th><th>Date</th><th>Status</th><th></th><th></th></tr></thead><tbody>
+    <table><thead><tr><th>Name</th><th>Category</th><th class="n">Amount</th><th>Date</th><th>Paid?</th><th></th><th></th></tr></thead><tbody>
     ${grouped(oneRows,7,(r,i)=>`<tr><td>${inp(`${b}.lines.${i}.name`,r.name,'Name')}</td><td>${catSel(`${b}.lines.${i}.cat`,r.cat)}</td>
       <td>${inp(`${b}.lines.${i}.amount`,r.amount,'Amount','number','0.00')}</td><td>${inp(`${b}.lines.${i}.date`,r.date,'Date','date')}</td>
-      <td>${status(`${b}.lines.${i}.status`,r.status,'Status')}</td>
+      <td><input type="checkbox" data-k="${b}.lines.${i}.status"${r.status==='Done'?' checked':''} aria-label="${esc(r.name)} paid"></td>
       <td><button class="x" data-act="recur" data-i="${i}" aria-label="Make ${esc(r.name)} recurring" title="Repeat every month">↻</button></td><td>${del(`${b}.lines`,i,r.name)}</td></tr>`)}
     </tbody></table><button class="add" data-act="add" data-k="${b}.lines">+ Add entry</button></section>`;
 }
@@ -297,6 +315,7 @@ function dashboard(){
   <div class="cards">${card('Total net worth',netWorth(),'','assets:')}${card('Income · '+S.view,v.inc,'',S.view+':income')}${card('Spent + saved · '+S.view,v.total,'',S.view+':spending')}
     ${card('Left to assign · '+S.view,v.left,v.tone,S.view+':savings')}${card('Savings rate · '+S.view,pct(v.rate),'',S.view+':savings')}</div>
   <section class="fit"><h3>Where the money goes · <span data-c>${S.view}</span></h3>${catWheel(v)}</section>
+  ${allowSec(vi,false)}
   <section><h3>Month by month</h3><table><thead><tr><th>Month</th><th class="n">Income</th><th class="n">Spent</th><th class="n">Saved</th><th class="n">Left to assign</th><th class="n">Savings rate</th><th>Zero-based check</th></tr></thead><tbody>
     ${all.map((c,i)=>`<tr><td><button class="x" style="color:var(--accent);font-size:14px" data-act="tab" data-k="${M[i]}">${M[i]}</button></td>${C(usd(c.inc))}
       ${C(usd(spent(c)))}${C(usd(c.cats['Savings & Goals']))}${C(usd(c.left))}${C(pct(c.rate))}${C(check(c),c.tone)}</tr>`).join('')}
@@ -390,8 +409,11 @@ function onEdit(e){
 }
 document.addEventListener('input',onEdit);
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button]')){e.preventDefault();e.target.click()}});
-// After you finish typing a name, regroup so the entry sits under its category.
-document.addEventListener('change',e=>{if(e.target.type==='checkbox')return onEdit(e);if(!resort)return;resort=false;setTimeout(()=>{
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+// After you finish typing a name, regroup so the entry sits under its category. Money gets its cents once you leave the box.
+document.addEventListener('change',e=>{const t=e.target;if(t.type==='checkbox')return onEdit(e);
+  if(t.type==='number'&&t.dataset.k&&t.value!==''&&money(t.dataset.k,t.value)!==t.value){t.value=money(t.dataset.k,t.value);set(t.dataset.k,t.value);save()}
+  if(!resort)return;resort=false;setTimeout(()=>{
   const a=document.activeElement,k=a?.dataset?.k;let s=null;try{s=a.selectionStart}catch{}
   render();const el=focusKey(k);if(el&&s!=null)try{el.setSelectionRange(s,s)}catch{}},250)});
 document.addEventListener('click',e=>{
@@ -404,7 +426,7 @@ document.addEventListener('click',e=>{
     if(!el)return scrollTo({top:0,behavior:'smooth'});
     el.scrollIntoView({behavior:'smooth',block:'start'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');return}
   let focus;
-  if(act==='add'){const list=get(k);list.push(k.endsWith('lines')?{name:'',cat:'Other',amount:'',date:'',status:''}:{name:'',value:'',notes:''});focus=`${k}.${list.length-1}.name`}
+  if(act==='add'){const list=get(k);list.push(k.endsWith('lines')?{name:'',cat:'Other',amount:'',date:today(),status:''}:{name:'',value:'',notes:''});focus=`${k}.${list.length-1}.name`}
   else if(act==='addItem'){S.items.push({id:uid(),name:'',cat:'Other',amount:'',start:mi});focus=`items.${S.items.length-1}.name`}
   else if(act==='addGoal'){S.items.push({id:uid(),name:'New goal',cat:'Savings & Goals',amount:'',start:0,manual:true,target:'',date:'',notes:''});focus=`items.${S.items.length-1}.name`}
   else if(act==='recur'){const m=S.months[tab],l=m.lines[i],id=uid();
@@ -412,6 +434,8 @@ document.addEventListener('click',e=>{
   else if(act==='stop'){const it=S.items[i];
     if(it.start>=mi){if(!confirm(`Remove "${it.name||'this item'}"? It only started this month.`))return;S.items.splice(i,1)}
     else{if(!confirm(`Stop "${it.name}" from ${tab} on? Earlier months keep it.`))return;it.end=mi-1}}
+  else if(act==='addAllow'){const c=document.getElementById('allowCat').value;S.allow[c]='';focus='allow.'+c}
+  else if(act==='delAllow'){delete S.allow[k];M.forEach(m=>delete S.months[m].allow?.[k])}
   else if(act==='del'){if(k==='items'&&!confirm(`Delete goal "${S.items[i].name}"? Its monthly amounts stop counting.`))return;get(k).splice(i,1)}
   save();render();focusKey(focus);
 });
@@ -425,7 +449,7 @@ document.getElementById('export').onclick=async()=>{
 };
 const isBackup=d=>d&&typeof d.months==='object'&&Array.isArray(d.assets)&&Array.isArray(d.liabilities)&&M.every(m=>d.months[m])
   &&(Array.isArray(d.items)?M.every(m=>Array.isArray(d.months[m].lines)):Array.isArray(d.goals)&&M.every(m=>d.months[m].income&&d.months[m].expenses));
-function load(d){S=migrate(d);S.netWorth??={};S.learned??={};tab='dash';save();render();spinTo(S.view)}
+function load(d){S=migrate(d);S.netWorth??={};S.learned??={};S.allow??={};tab='dash';save();render();spinTo(S.view)}
 document.getElementById('import').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   try{const d=JSON.parse(await f.text());if(!isBackup(d))throw 0;
@@ -462,7 +486,7 @@ function bankImport(text){
     const it=S.items.find(it=>active(it,mi)&&!m.rec[it.id]?.ref&&m.rec[it.id]?.status!=='Done'&&(it.cat==='Income')===(a>0)&&n(eff(it,mi))===Math.abs(a));
     if(it){Object.assign(m.rec[it.id]??={},{status:'Done',date,ref});res.paid++;continue}
     const name=bankName(String(r[ni]));
-    m.lines.push({name,cat:a>0?'Income':guess(name),amount:String(Math.abs(a)),date,status:'Done',ref});res.added++;
+    m.lines.push({name,cat:a>0?'Income':guess(name),amount:Math.abs(a).toFixed(2),date,status:'Done',ref});res.added++;
   }
   return res;
 }
@@ -573,6 +597,7 @@ setInterval(()=>D.on&&paintDrive(),60e3); // refreshes "saved N min ago"; does n
  const f=`"DATE","DESCRIPTION","AMOUNT"\n"05/01/${S.year}","RENT, MAY","-1,000.00"\n"05/02/${S.year}","PURCHASE AUTHORIZED ON 05/01 CIRCLE K #26 1770 SAINT PAUL MN P0000004478 CARD 7077","-40.08"\n`;
  const b1=bankImport(f),b2=bankImport(f),l=S.months.May.lines.at(-1);
  console.assert(b1.paid===1&&b1.added===1&&b2.dup===2&&S.months.May.rec.t.status==='Done'&&l.name==='Circle K'&&l.cat==='Transportation'&&l.date===`${S.year}-05-02`,'bank import self-check failed',b1,b2,l);
+ console.assert(money('a','45')==='45.00'&&money('a','')===''&&money('year','2026')==='2026','cents self-check failed');
  S=s;}
 
 render();spinTo(S.view);paintWheel();paintDrive();handleRedirect();if(D.dirty)backupNow();
