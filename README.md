@@ -68,5 +68,13 @@ The Client ID isn't a password, so it's fine for it to be public on GitHub.
 - Importing the same file again skips anything already imported, so you can download your latest activity each month and import it again.
 - Only transactions from the budget's year come in. Money in counts as Income, including transfers from your own savings, so delete those if you don't want them counted.
 
+## Dashboard extras
+- **Paycheck check:** enter your next payday, how often you're paid and your take-home pay. For this paycheck and the next one, the app adds up the recurring bills due before the following payday and tells you what's left to spend, or warns you (with a banner) if you'll be short. A bill counts on its due date, so give recurring items a due date in a month page.
+- **Search:** type a name, category, amount, date or month to find any entry. Tap a result to open that month.
+- **Edit categories:** under Allowances → ✎ Edit categories, add, rename or remove categories. Removing one moves its entries to Other.
+- **Theme:** ⚙ Settings → Theme (10 color themes) and Light or dark.
+- **Daily quote and streak:** a new quote each day, and a streak that grows each day you open the app.
+- **Money mindset:** a short weekly exercise with space for notes, based on ideas from *The Psychology of Money* and *Die with Zero* (in our own words).
+
 ## Family
 Everyone opens the same link and installs the app. Each person gets their own separate budget. To start someone off with a copy of yours, send them a backup file and have them use **Import backup**.

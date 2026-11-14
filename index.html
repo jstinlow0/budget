@@ -15,32 +15,44 @@
   --font:system-ui,-apple-system,"Segoe UI",sans-serif;
   --bg-image:none;            /* e.g. url("background.jpg") */
   --bg:#f6f5f1;--panel:#fff;--ink:#1d1d1f;--muted:#6b6b70;--line:#e3e1db;
-  --accent:#2f5bd3;--ok:#2e8b57;--warn:#b7791f;--bad:#c53030;--input:#eef3ff;
+  --accent:var(--a-l);--a2:var(--a2-l);--on:#fff;--ok:#2e8b57;--warn:#b7791f;--bad:#c53030;--input:#eef3ff;
   /* category colors, in category order (see CATEGORIES in the script) */
   --c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100;--c5:#e87ba4;--c6:#008300;--c7:#6250d6;--c8:#e34948;--c0:#8a8a8f;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#141416;--panel:#1e1e21;--ink:#ececef;--muted:#9a9aa2;--line:#2e2e33;--accent:#7b9cff;--ok:#5cc28a;--warn:#e0b04f;--bad:#f07272;--input:#23283a;
+  --bg:#141416;--panel:#1e1e21;--ink:#ececef;--muted:#9a9aa2;--line:#2e2e33;--accent:var(--a-d);--a2:var(--a2-d);--on:#111;--ok:#5cc28a;--warn:#e0b04f;--bad:#f07272;--input:#23283a;
   --c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500;--c5:#d55181;--c6:#008300;--c7:#9085e9;--c8:#e66767;--c0:#77777d}}
 :root[data-theme="dark"]{
-  --bg:#141416;--panel:#1e1e21;--ink:#ececef;--muted:#9a9aa2;--line:#2e2e33;--accent:#7b9cff;--ok:#5cc28a;--warn:#e0b04f;--bad:#f07272;--input:#23283a;
+  --bg:#141416;--panel:#1e1e21;--ink:#ececef;--muted:#9a9aa2;--line:#2e2e33;--accent:var(--a-d);--a2:var(--a2-d);--on:#111;--ok:#5cc28a;--warn:#e0b04f;--bad:#f07272;--input:#23283a;
   --c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500;--c5:#d55181;--c6:#008300;--c7:#9085e9;--c8:#e66767;--c0:#77777d}
+/* Themes (⚙ Settings → Theme). a-l / a-d = main color in light / dark mode, a2 = second color, tint = background wash.
+   To add one: copy a line, rename it, and add the name to THEMES in the script. */
+:root,[data-skin=classic]{--a-l:#2f5bd3;--a-d:#7b9cff;--a2-l:#19a974;--a2-d:#5cc28a;--tint:#2f5bd3}
+[data-skin=acorn]   {--a-l:#2b7a3d;--a-d:#8cc63f;--a2-l:#6aa62c;--a2-d:#c5e86c;--tint:#8cc63f}
+[data-skin=market]  {--a-l:#008a03;--a-d:#00c805;--a2-l:#5f8f00;--a2-d:#ccff00;--tint:#00c805}
+[data-skin=ruby]    {--a-l:#b3261e;--a-d:#ff8a80;--a2-l:#a8841a;--a2-d:#e8c45a;--tint:#b3261e}
+[data-skin=ember]   {--a-l:#c2521c;--a-d:#ff9a5c;--a2-l:#1f6f78;--a2-d:#5cc8d2;--tint:#e8743b}
+[data-skin=gold]    {--a-l:#8a6a00;--a-d:#f2c14e;--a2-l:#1f3a5f;--a2-d:#8fb3e0;--tint:#f2c14e}
+[data-skin=evergreen]{--a-l:#1e7b4f;--a-d:#5fd39a;--a2-l:#a8841a;--a2-d:#e8c45a;--tint:#1e7b4f}
+[data-skin=harbor]  {--a-l:#1d5fbf;--a-d:#6fa8ff;--a2-l:#13866a;--a2-d:#4fd1a5;--tint:#1d5fbf}
+[data-skin=midnight]{--a-l:#3a36b0;--a-d:#a19dff;--a2-l:#a8841a;--a2-d:#e8c45a;--tint:#3a36b0}
+[data-skin=royal]   {--a-l:#6b3fa0;--a-d:#c39bff;--a2-l:#13866a;--a2-d:#4fd1a5;--tint:#6b3fa0}
 /* ===== end of customize section ===== */
 
 *{box-sizing:border-box}
-body{margin:0;color:var(--ink);font:14px/1.45 var(--font);background-color:var(--bg);background-image:var(--bg-image);background-size:cover;background-position:center;background-attachment:fixed}
+body{margin:0;color:var(--ink);font:14px/1.45 var(--font);background-color:color-mix(in srgb,var(--bg) 93%,var(--tint));background-image:var(--bg-image);background-size:cover;background-position:center;background-attachment:fixed}
 header{position:sticky;top:0;z-index:10;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;border-bottom:1px solid var(--line);background:var(--panel)}
 header h1{margin:0 0 6px;font-size:15px;text-align:center}
 .navrow{display:flex;align-items:center;gap:8px;max-width:1100px;margin:0 auto}
 .pill{flex:0 0 auto;width:84px;min-height:44px;border:1px solid var(--line);background:none;color:var(--ink);border-radius:10px;cursor:pointer;font:600 12px/1.2 var(--font)}
-.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pill.on{background:linear-gradient(135deg,var(--accent),var(--a2));border-color:transparent;color:var(--on)}
 .wheelwrap{position:relative;flex:1;min-width:0}
 .wheelwrap::before{content:"";position:absolute;left:50%;top:-4px;transform:translateX(-50%);border:7px solid transparent;border-top-color:var(--accent);z-index:1}
 .wheel{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;perspective:260px;padding:9px calc(50% - 33px);
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent)}
 .wheel::-webkit-scrollbar{display:none}
 .wheel button{flex:0 0 66px;height:38px;scroll-snap-align:center;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;cursor:pointer;font:600 14px var(--font);transition:background .2s,color .2s}
-.wheel button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.wheel button.on{background:linear-gradient(135deg,var(--accent),var(--a2));border-color:transparent;color:var(--on)}
 main{max-width:1100px;margin:0 auto;padding:12px 16px}
 h2{margin:4px 0;font-size:22px}
 h3{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -105,7 +117,30 @@ footer button,footer label,.banner button{border:1px solid var(--line);backgroun
 #drive{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%}
 .banner{max-width:1100px;margin:10px auto 0;padding:0 16px}
 .banner div{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--input);border:1px solid var(--accent);border-radius:10px;padding:10px 12px;font-weight:600}
-.banner button.go{background:var(--accent);border-color:var(--accent);color:#fff}
+.banner div+div{margin-top:8px}
+.banner button.go{background:var(--accent);border-color:var(--accent);color:var(--on)}
+/* polish + new pieces */
+header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:linear-gradient(90deg,var(--accent),var(--a2))}
+h2{letter-spacing:-.01em}
+section,.card{box-shadow:0 1px 3px rgb(0 0 0/.05)}
+.card b{color:var(--ink)}.card.ok b{color:var(--ok)}.card.warn b{color:var(--warn)}.card.bad b{color:var(--bad)}
+.hero{border-radius:14px;padding:16px;margin:12px 0;color:var(--on);background:linear-gradient(135deg,var(--accent),var(--a2))}
+.hero .streak{font-weight:700;font-size:13px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hero blockquote{margin:10px 0 0;font:600 17px/1.35 Georgia,"Times New Roman",serif}
+.hero cite{display:block;margin-top:6px;font:400 12px var(--font);opacity:.85}
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.swatches button{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:20px;padding:5px 10px 5px 5px;cursor:pointer;font:inherit}
+.swatches button.on{border-color:var(--ink);font-weight:700}
+.swatches i{width:22px;height:22px;border-radius:50%}
+.results{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.results button{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);padding:7px 2px;cursor:pointer;font:inherit}
+.results small{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chips span{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:16px;padding:2px 2px 2px 10px}
+.chips .x{min-width:28px;min-height:28px;font-size:13px}
+.pay{border-left:4px solid var(--ok)}.pay.bad{border-left-color:var(--bad)}
+.exercise p{margin:6px 0}
+textarea{width:100%;min-height:70px;font:inherit;color:var(--ink);background:var(--input);border:1px solid transparent;border-radius:6px;padding:8px}
 </style>
 </head>
 <body>
@@ -125,13 +160,18 @@ footer button,footer label,.banner button{border:1px solid var(--line);backgroun
   <label>Import backup <input id="import" type="file" accept="application/json,.json" hidden></label>
   <label>Import bank CSV <input id="bank" type="file" accept=".csv,text/csv" hidden></label>
   <span>Data is saved on this device, plus your own Google Drive if Drive backup is on.</span>
-  <span>App version 2026.11.14-1 <!-- change this date each time you upload a new version --></span>
+  <span>App version 2026.11.14-2 <!-- change this date each time you upload a new version --></span>
 </footer>
 <script>
 // ===== 2. CATEGORIES: names, colors (--c1..--c8 above) and the words that pick them =====
-const EXP=['Housing','Food','Transportation','Utilities','Personal','Savings & Goals','Entertainment','Debt','Other'];
-const CATS=['Income',...EXP];
-const color=k=>k==='Income'?'var(--ok)':EXP.indexOf(k)<8&&EXP.includes(k)?`var(--c${EXP.indexOf(k)+1})`:'var(--c0)';
+// The starting categories. You can add, rename and remove your own in the app (Allowances → Edit categories); they're saved in S.cats.
+const DEF=['Housing','Food','Transportation','Utilities','Personal','Savings & Goals','Entertainment','Debt','Other'];
+let EXP=DEF,CATS=['Income',...EXP];
+const FIXED=['Savings & Goals','Other']; // goals and the catch-all can't be renamed or removed
+function setCats(){EXP=[...(S.cats||DEF).filter(c=>c!=='Other'),'Other'];CATS=['Income',...EXP]}
+// Built-in categories keep their color even if others are added or removed; your own get a steady color from their name.
+const color=k=>{if(k==='Income')return 'var(--ok)';const i=DEF.indexOf(k);if(i>=0&&i<8)return `var(--c${i+1})`;if(k==='Other'||!k)return 'var(--c0)';
+  let h=0;for(const ch of k)h=(h*31+ch.charCodeAt(0))%360;return `hsl(${h} 55% 48%)`};
 const KW={
   Income:'salary,paycheck,payroll,pay,wage,bonus,income,refund,dividend,freelance,tips,commission,reimbursement,cashback,side hustle,deposit',
   Housing:'rent,mortgage,hoa,renters insurance,home insurance,property tax,cleaning,maid,furniture,home repair,repair,landlord,parking fee,storage',
@@ -148,7 +188,8 @@ const norm=s=>String(s||'').trim().toLowerCase();
 function guess(name){
   const learned=S?.learned?.[norm(name)];if(learned)return learned;
   let best=null;for(const r of RULES)if(r.re.test(name)&&(!best||r.len>best.len))best=r;
-  return best?best.cat:'Other';
+  const c=best&&(S?.alias?.[best.cat]??best.cat); // a renamed starting category still gets its keywords
+  return c&&CATS.includes(c)?c:'Other';
 }
 
 // ===== 3. DATA & MATH =====
@@ -173,7 +214,15 @@ function seed(){
   return S;
 }
 // Fills in anything an older save or backup is missing, so every screen can rely on it.
-function tidy(){S.netWorth??={};S.learned??={};S.allow??={};S.gone??=[];if(!M.includes(S.view))S.view='Jan'}
+function tidy(){S.netWorth??={};S.learned??={};S.allow??={};S.gone??=[];S.pay??={every:'14'};S.notes??={};if(!M.includes(S.view))S.view='Jan';setCats();applyLook()}
+// Renames a category everywhere: entries, recurring items, allowances, learned names. Renaming to "Other" = removing it.
+function renameCat(a,b){
+  const fix=r=>{if(r.cat===a)r.cat=b};S.items.forEach(fix);M.forEach(m=>S.months[m].lines.forEach(fix));
+  for(const k in S.learned)if(S.learned[k]===a)S.learned[k]=b;
+  S.alias??={};for(const k in S.alias)if(S.alias[k]===a)S.alias[k]=b;if(DEF.includes(a))S.alias[a]=b;
+  [S.allow,...M.map(m=>S.months[m].allow||{})].forEach(o=>{if(a in o){if(b!=='Other')o[b]=o[a];delete o[a]}});
+  S.cats=[...new Set(EXP.map(c=>c===a?b:c).filter(c=>c!=='Other'))];setCats();
+}
 
 const active=(it,mi)=>it.start<=mi&&(it.end==null||mi<=it.end);
 // A recurring item uses its usual amount unless this month has its own amount.
@@ -250,7 +299,10 @@ function allowSec(mi,month){
   return `<section data-jump="allowance"><h3>Allowances · ${mo}</h3>
     <p class="hint">${rows?'Your spending limit for each category. "Spent" counts everything in that category this month, recurring and one-time.'+(month?' Use "This month" when one month gets a different limit.':''):'Give yourself a monthly limit for a category, like $200 for Food. It repeats every month.'}</p>
     ${rows?`<table><thead><tr><th>Category</th><th class="n">Left</th><th></th><th class="n">Spent</th><th class="n">Monthly</th>${month?'<th class="n">This month</th>':''}<th></th></tr></thead><tbody>${rows}</tbody></table>`:''}
-    ${free.length?`<select id="allowCat" aria-label="Category for a new allowance">${free.map(k=>`<option>${esc(k)}</option>`).join('')}</select> <button class="add" data-act="addAllow">+ Add allowance</button>`:''}</section>`;
+    ${free.length?`<select id="allowCat" aria-label="Category for a new allowance">${free.map(k=>`<option>${esc(k)}</option>`).join('')}</select> <button class="add" data-act="addAllow">+ Add allowance</button>`:''}
+    <details><summary class="hint" style="cursor:pointer;margin-top:10px">✎ Edit categories</summary>
+      <div class="chips">${EXP.filter(k=>!FIXED.includes(k)).map(k=>`<span><i class="dot" style="background:${color(k)}"></i>${esc(k)}<button class="x" data-act="catRen" data-k="${esc(k)}" aria-label="Rename ${esc(k)}">✎</button><button class="x" data-act="catDel" data-k="${esc(k)}" aria-label="Remove ${esc(k)}">×</button></span>`).join('')}</div>
+      <button class="add" data-act="catAdd">+ New category</button></details></section>`;
 }
 
 function monthView(mo){
@@ -282,6 +334,125 @@ function monthView(mo){
     </tbody></table><button class="add" data-act="add" data-k="${b}.lines">+ Add entry</button></section>`;
 }
 
+// ----- Themes, daily quote, streak, search, paycheck check, money exercises (all shown on the Dashboard) -----
+const THEMES=[['classic','Classic'],['acorn','Acorn'],['market','Market'],['ruby','Ruby'],['ember','Ember'],['gold','Gold'],['evergreen','Evergreen'],['harbor','Harbor'],['midnight','Midnight'],['royal','Royal']];
+function applyLook(){
+  const r=document.documentElement;r.dataset.skin=S.skin||'classic';if(S.mode)r.dataset.theme=S.mode;else delete r.dataset.theme;
+  document.querySelector('meta[name=theme-color]').content=getComputedStyle(r).getPropertyValue('--accent').trim()||'#2f5bd3';
+}
+// Old, public-domain words (translations of the Stoics, Franklin, proverbs). One per day.
+const QUOTES=[
+  ['It is not the man who has too little, but the man who craves more, that is poor.','Seneca'],
+  ['Wealth consists not in having great possessions, but in having few wants.','Epictetus'],
+  ['Beware of little expenses; a small leak will sink a great ship.','Benjamin Franklin'],
+  ['Very little is needed to make a happy life.','Marcus Aurelius'],
+  ['He who is not satisfied with a little is satisfied with nothing.','Epicurus'],
+  ['A journey of a thousand miles begins with a single step.','Lao Tzu'],
+  ['That man is the richest whose pleasures are the cheapest.','Henry David Thoreau'],
+  ['We suffer more often in imagination than in reality.','Seneca'],
+  ['If you would be wealthy, think of saving as well as of getting.','Benjamin Franklin'],
+  ['Rather go to bed supperless than rise in debt.','Benjamin Franklin'],
+  ['No man is free who is not master of himself.','Epictetus'],
+  ['First say to yourself what you would be; and then do what you have to do.','Epictetus'],
+  ['Waste no more time arguing what a good man should be. Be one.','Marcus Aurelius'],
+  ['Difficulties strengthen the mind, as labor does the body.','Seneca'],
+  ['Begin at once to live, and count each separate day as a separate life.','Seneca'],
+  ['Well done is better than well said.','Benjamin Franklin'],
+  ['Energy and persistence conquer all things.','Benjamin Franklin'],
+  ['Do not spoil what you have by desiring what you have not.','Epicurus'],
+  ['Fortune favors the bold.','Latin proverb'],
+  ['The happiness of your life depends upon the quality of your thoughts.','Marcus Aurelius'],
+  ['Money is a good servant but a bad master.','Proverb'],
+  ['Rule your mind or it will rule you.','Horace'],
+  ['He is a wise man who does not grieve for the things which he has not, but rejoices for those which he has.','Epictetus'],
+  ['Little by little, one travels far.','Proverb'],
+  ['The man who moves a mountain begins by carrying away small stones.','Chinese proverb'],
+  ['Don\'t explain your philosophy. Embody it.','Epictetus'],
+  ['A penny saved is a penny earned.','Proverb'],
+  ['He who knows he has enough is rich.','Lao Tzu'],
+  ['Fall seven times, stand up eight.','Japanese proverb'],
+  ['Luck is what happens when preparation meets opportunity.','Seneca'],
+  ['It\'s not what happens to you, but how you react to it that matters.','Epictetus'],
+  ['Hope is a waking dream.','Aristotle'],
+  ['Time is the most valuable thing a man can spend.','Theophrastus']];
+const dayNo=()=>Math.floor(new Date(today()+'T12:00')/864e5);
+// Money exercises: our own short versions of ideas from two popular money books (we don't quote them).
+const PM='Idea from The Psychology of Money (Morgan Housel)',DZ='Idea from Die with Zero (Bill Perkins)',MIND='Money and emotions';
+const EX=[
+  ['What is "enough"?',PM,'Write what "enough" looks like for you: the monthly amount that covers your needs plus a few joys. What would you stop chasing once you have it?'],
+  ['Room for error',PM,'How many weeks of bills could you cover if your income stopped tomorrow? Aim to add one more week this month.'],
+  ['Let time do the work',PM,'Pick a small amount, like $5 a day, and put it in a goal for 30 days. Write how it feels on day 30.'],
+  ['Wealth is what you don\'t see',PM,'Next time you want to buy something to impress someone, write down who it\'s really for. Put half of that amount in a goal instead.'],
+  ['Save for no reason',PM,'Add a goal called "Just in case" and put something in it this paycheck. Saving without a reason protects you from surprises.'],
+  ['Reasonable beats perfect',PM,'Write one money rule you can really keep for a whole year, even if it isn\'t "optimal". Example: "I save $50 every paycheck."'],
+  ['Play your own game',PM,'Think of someone whose spending you envy. Are their goals the same as yours? Write your own top 3 goals.'],
+  ['Plan for the worst, hope for the best',PM,'Write your worst-case plan (what you\'d cut first) and your best-case dream. You can hold both at once.'],
+  ['Memory dividends',DZ,'List 3 experiences that still make you smile. Plan one experience under $100 this month and put it in your budget.'],
+  ['Time buckets',DZ,'Split your life into 10-year buckets. Write 2 experiences you want in each one. Which bucket closes first?'],
+  ['Your health window',DZ,'Which experiences need the health and energy you have now? Start a goal for one of them.'],
+  ['Give while you\'re here',DZ,'Who could you help now instead of "someday"? Plan one small gift or act this month and write how it felt.'],
+  ['When to start spending down',DZ,'Guess the age when you\'d start spending your savings on purpose. It\'s fine to change it later; just having a number helps.'],
+  ['Memories or stuff?',DZ,'Look at this month\'s Entertainment and Personal spending. Rate each item 1–5 for how much joy it gave. Keep the 5s, trim the 1s.'],
+  ['The 24-hour pause',MIND,'Before any purchase over $50 this week, wait 24 hours. Write how much you wanted it then and now.'],
+  ['Calm plan for a hard month',MIND,'Imagine your income stopped for a month. Write 3 calm steps you\'d take. Fear shrinks when there\'s a plan.'],
+  ['Name the feeling',MIND,'Look at your last 5 purchases. Next to each, write the feeling you had: bored, stressed, happy, tired. Do you see a pattern?']];
+let exI=null,q='';
+// Search every entry and recurring item by name, category, amount, date or month.
+function search(){
+  const words=norm(q).split(/\s+/).filter(Boolean);if(!words.length)return '';
+  const hits=[];
+  M.forEach((m,mi)=>{
+    S.months[m].lines.forEach(l=>hits.push({m,date:l.date,name:l.name,cat:l.cat,amt:l.amount}));
+    S.items.forEach(it=>active(it,mi)&&n(eff(it,mi))&&hits.push({m,date:S.months[m].rec[it.id]?.date||'',name:it.name+' ↻',cat:it.cat,amt:eff(it,mi)}))});
+  const found=hits.filter(h=>words.every(w=>norm(`${h.name} ${h.cat} ${money('',h.amt)} ${h.date} ${h.m} ${FULL[M.indexOf(h.m)]}`).includes(w)));
+  return `<small>${found.length} found${found.length>50?', showing 50':''}</small>`+found.slice(0,50).map(h=>`<button data-act="tab" data-k="${h.m}">
+    <span class="dot" style="background:${color(h.cat)}"></span><span>${esc(h.name||'(no name)')}<br><small>${esc(h.date||h.m)} · ${esc(h.cat)}</small></span>
+    <b class="${h.cat==='Income'?'ok':''}">${h.cat==='Income'?'+':'−'}${usd(n(h.amt))}</b></button>`).join('');
+}
+// Paycheck check: are this paycheck's recurring bills covered? Bills count by their due day (the "Due date" in a month page).
+const iso=d=>new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+function dueDay(it,mi,y){const r=S.months[M[mi]].rec[it.id]?.date,d=r?+r.slice(8,10):n(it.day);return d&&Math.min(d,new Date(y,mi+1,0).getDate())}
+function payCheck(ahead=0){
+  const p=S.pay,every=n(p.every)||14;if(!p.next||!n(p.amount))return null;
+  const start=new Date(p.next+'T00:00'),days=Math.round((new Date(today()+'T00:00')-start)/864e5);
+  start.setDate(start.getDate()+(Math.floor(days/every)+ahead)*every);
+  const end=new Date(start);end.setDate(end.getDate()+every);
+  const bills=[];
+  for(const d=new Date(start);d<end;d.setDate(d.getDate()+1)){if(String(d.getFullYear())!==String(S.year))continue;const mi=d.getMonth();
+    S.items.forEach(it=>{if(it.cat!=='Income'&&active(it,mi)&&n(eff(it,mi))&&dueDay(it,mi,d.getFullYear())===d.getDate())
+      bills.push({name:it.name,amt:n(eff(it,mi)),date:iso(d),paid:S.months[M[mi]].rec[it.id]?.status==='Done'})})}
+  const total=r2(bills.reduce((a,b)=>a+b.amt,0));
+  return {start,end:new Date(end-864e5),bills,total,left:r2(n(p.amount)-total)};
+}
+const shortDate=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+function paySec(){
+  const mi=new Date().getMonth(),noDate=S.items.filter(it=>it.cat!=='Income'&&active(it,mi)&&n(eff(it,mi))&&!dueDay(it,mi,new Date().getFullYear())).length;
+  const one=(pc,label)=>!pc?'':`<div class="pay ${pc.left<0?'bad':''}" style="padding-left:10px;margin:10px 0"><b>${label}: ${shortDate(pc.start)} – ${shortDate(pc.end)}</b><br>
+    ${usd(n(S.pay.amount))} paycheck − ${usd(pc.total)} bills due = <b class="${pc.left<0?'bad':'ok'}">${pc.left<0?'Short by '+usd(-pc.left):usd(pc.left)+' left to spend'}</b>
+    ${pc.bills.length?`<small style="display:block;color:var(--muted)">${pc.bills.map(b=>`${b.paid?'✓ ':''}${esc(b.name)} ${usd(b.amt)} (${b.date.slice(5).replace('-','/')})`).join(' · ')}</small>`:''}
+    ${pc.left<0?'<small style="display:block">Move a due date, trim spending, or plan to use savings before this paycheck runs out.</small>':''}</div>`;
+  return `<section data-jump="paycheck"><h3>💵 Paycheck check</h3>
+    <div class="cards" style="margin:0"><label>Next payday ${inp('pay.next',S.pay.next,'Next payday','date')}</label>
+      <label>Paid every <select data-k="pay.every" aria-label="Paid every">${[['7','week'],['14','2 weeks'],['28','4 weeks']].map(([v,t])=>`<option value="${v}"${S.pay.every===v?' selected':''}>${t}</option>`).join('')}</select></label>
+      <label>Take-home pay ${inp('pay.amount',S.pay.amount,'Take-home pay per paycheck','number','0.00')}</label></div>
+    <div data-c>${S.pay.next&&n(S.pay.amount)?one(payCheck(0),'This paycheck')+one(payCheck(1),'Next paycheck')
+      +(noDate?`<small class="hint">${noDate} recurring item${noDate>1?'s have':' has'} no due date, so ${noDate>1?'they aren\'t':'it isn\'t'} counted. Add a due date in this month's page.</small>`:'')
+      :'<p class="hint">Enter your next payday and take-home pay. The app checks that each paycheck covers the recurring bills due before the next one.</p>'}</div></section>`;
+}
+function hero(){
+  const [t,a]=QUOTES[dayNo()%QUOTES.length],s=S.streak||{};
+  return `<div class="hero"><div class="streak"><span>🔥 ${s.count||1}-day streak</span><span style="opacity:.85">Best: ${s.best||1} days</span></div>
+    <blockquote>“${esc(t)}”<cite>— ${esc(a)}</cite></blockquote></div>`;
+}
+function exerciseSec(){
+  const i=exI??Math.floor(dayNo()/7)%EX.length,[t,src,p]=EX[i];
+  return `<section class="exercise"><h3>🧠 Money mindset · this week</h3><b>${esc(t)}</b><p>${esc(p)}</p><small class="hint">${esc(src)}</small>
+    <textarea data-k="notes.e${i}" aria-label="Your notes for ${esc(t)}" placeholder="Your thoughts…">${esc(S.notes['e'+i]||'')}</textarea>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" style="margin:0" data-k="notes.e${i}done"${S.notes['e'+i+'done']?' checked':''}> Done</label>
+    <button class="add" data-act="ex" data-i="${(i+EX.length-1)%EX.length}">◀ Previous</button> <button class="add" data-act="ex" data-i="${(i+1)%EX.length}">Next ▶</button>
+    <small class="hint"> ${EX.filter((_,j)=>S.notes['e'+j+'done']).length} of ${EX.length} done</small></section>`;
+}
+
 function dashboard(){
   const all=M.map((m,i)=>calc(i)),vi=M.indexOf(S.view),v=all[vi];
   const yr=k=>r2(all.reduce((a,c)=>a+k(c),0)),yInc=yr(c=>c.inc),ySav=yr(c=>c.cats['Savings & Goals']);
@@ -293,11 +464,18 @@ function dashboard(){
   <details class="settings"><summary>⚙ Settings</summary><div class="cards" style="margin:10px 0 4px">
     <label>Your name ${inp('name',S.name,'Your name')}</label><label>Title ${inp('title',S.title,'Title')}</label>
     <label>Year ${inp('year',S.year,'Year','number')}</label><label>View month ${sel('view',S.view,M,'View month').replace('<option></option>','')}</label></div>
+    <b class="hint">Theme</b><div class="swatches">${THEMES.map(([k,t])=>`<button data-act="skin" data-k="${k}" class="${(S.skin||'classic')===k?'on':''}"><i data-skin="${k}" style="background:linear-gradient(135deg,var(--a-l),var(--a2-l))"></i>${t}</button>`).join('')}</div>
+    <label>Light or dark <select data-k="mode" aria-label="Light or dark">${[['','Match my phone'],['light','Light'],['dark','Dark']].map(([v,t])=>`<option value="${v}"${(S.mode||'')===v?' selected':''}>${t}</option>`).join('')}</select></label><br>
     <button class="add" data-act="newYear">Start ${n(S.year)+1}</button> <span class="hint">Saves a backup of ${esc(S.year)}, then clears every month's entries. Recurring items, allowances, goals and assets stay.</span></details>
+  ${hero()}
   <div class="cards">${card('Total net worth',netWorth(),'','assets:')}${card('Income · '+S.view,v.inc,'',S.view+':income')}${card('Spent + saved · '+S.view,v.total,'',S.view+':spending')}
     ${card('Left to assign · '+S.view,v.left,v.tone,S.view+':savings')}${card('Savings rate · '+S.view,pct(v.rate),'',S.view+':savings')}</div>
+  ${paySec()}
+  <section><h3>🔍 Search transactions</h3><input type="search" data-k="_q" value="${esc(q)}" placeholder="Name, category, amount, date or month" aria-label="Search transactions">
+    <div class="results" data-c>${search()}</div></section>
   <section class="fit"><h3>Where the money goes · <span data-c>${S.view}</span></h3>${catWheel(v)}</section>
   ${allowSec(vi,false)}
+  ${exerciseSec()}
   <section><h3>Month by month</h3><table><thead><tr><th>Month</th><th class="n">Income</th><th class="n">Spent</th><th class="n">Saved</th><th class="n">Left to assign</th><th class="n">Savings rate</th><th>Zero-based check</th></tr></thead><tbody>
     ${all.map((c,i)=>`<tr><td><button class="x" style="color:var(--accent);font-size:14px" data-act="tab" data-k="${M[i]}">${M[i]}</button></td>${C(usd(c.inc))}
       ${C(usd(spent(c)))}${C(usd(c.cats['Savings & Goals']))}${C(usd(c.left))}${C(pct(c.rate))}${C(check(c),c.tone)}</tr>`).join('')}
@@ -336,7 +514,7 @@ function assetsView(){
 const html=()=>tab==='dash'?dashboard():tab==='assets'?assetsView():monthView(tab);
 const app=document.getElementById('app'),ttl=document.getElementById('ttl'),wheel=document.getElementById('wheel');
 function render(){
-  app.innerHTML=html();
+  app.innerHTML=html();paintDrive();
   document.querySelectorAll('header [data-act=tab]').forEach(b=>b.classList.toggle('on',b.dataset.k===tab));
   ttl.textContent=document.title=heading();
 }
@@ -347,7 +525,7 @@ function refresh(){
   const a=app.querySelectorAll('[data-c]'),b=t.querySelectorAll('[data-c]');
   if(a.length!==b.length)return render();
   a.forEach((el,i)=>{el.innerHTML=b[i].innerHTML;if(b[i].dataset.k)el.dataset.k=b[i].dataset.k;if(typeof el.className==='string')el.className=b[i].className;el.style.cssText=b[i].style.cssText});
-  ttl.textContent=heading();
+  ttl.textContent=heading();paintDrive();
 }
 function focusKey(k){const el=k&&app.querySelector(`[data-k="${CSS.escape(k)}"]`);if(el){el.focus({preventScroll:false});return el}}
 
@@ -382,17 +560,21 @@ function go(k,spin=true){
 // ===== 6. BUTTONS & TYPING =====
 function onEdit(e){
   const k=e.target.dataset.k;if(!k)return;
+  if(k==='_q'){q=e.target.value;return refresh()} // search box: not saved
   const v=e.target.type==='checkbox'?(e.target.checked?'Done':''):e.target.value,p=k.split('.'),field=p.pop(),base=p.join('.'),row=get(base);
   if(p[0]==='items'&&field==='amount'&&M.includes(tab))freeze(row,M.indexOf(tab));
   set(k,v);
   if(row&&'cat' in row&&field==='cat'){row.manual=true;if(norm(row.name))S.learned[norm(row.name)]=v;e.target.style.setProperty('--dot',color(v));resort=true}
   if(row&&'cat' in row&&field==='name'&&!row.manual){const c=guess(v);
     if(c!==row.cat){row.cat=c;resort=true;const s=app.querySelector(`[data-k="${CSS.escape(base+'.cat')}"]`);if(s){s.value=c;s.style.setProperty('--dot',color(c))}}}
+  if(k==='mode')applyLook();
+  // A due date set in any month becomes the item's usual due day (used by the paycheck check).
+  if(p[0]==='months'&&p[2]==='rec'&&field==='date'&&v){const it=S.items.find(x=>x.id===p[3]);if(it)it.day=v.slice(8,10)}
   save();refresh();
 }
 document.addEventListener('input',onEdit);
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button]')){e.preventDefault();e.target.click()}});
-const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const today=()=>iso(new Date());
 // After you finish typing a name, regroup so the entry sits under its category. Money gets its cents once you leave the box.
 document.addEventListener('change',e=>{const t=e.target;if(t.type==='checkbox')return onEdit(e);
   if(t.type==='number'&&t.dataset.k&&t.value!==''&&money(t.dataset.k,t.value)!==t.value){t.value=money(t.dataset.k,t.value);set(t.dataset.k,t.value);save()}
@@ -404,6 +586,7 @@ document.addEventListener('click',e=>{
   const {act,k}=btn.dataset,i=+btn.dataset.i,mi=M.indexOf(tab);
   if(act==='tab'){spinning=false;return go(k)}
   if(act==='cat'){selCat=selCat===k?null:k;spins++;return refresh()}
+  if(act==='ex'){exI=i;return render()}
   if(act==='jump'){const [to,sec]=k.split(':');spinning=false;go(to);
     const el=app.querySelector(`[data-jump="${sec}"]`)||(M.includes(to)&&app.querySelector('[data-jump="recurring"]'));
     if(!el)return scrollTo({top:0,behavior:'smooth'});
@@ -422,6 +605,11 @@ document.addEventListener('click',e=>{
     document.getElementById('export').click(); // copies the data right away, before anything below changes it
     S.items=S.items.filter(it=>it.end==null).map(it=>({...it,start:0,carried:it.cat==='Savings & Goals'?goalSaved(it):it.carried}));
     M.forEach(m=>S.months[m]={lines:[],rec:{}});Object.assign(S,{year:String(y),view:'Jan',netWorth:{},gone:[]});tab='Jan';spinTo('Jan',true)}
+  else if(act==='skin'){S.skin=k;applyLook()}
+  else if(act==='catAdd'||act==='catRen'){const v=prompt(act==='catAdd'?'Name of the new category:':`Rename "${k}" to:`,act==='catAdd'?'':k)?.trim();
+    if(!v||v===k)return;if(CATS.some(c=>norm(c)===norm(v)))return alert(`There's already a category called "${v}".`);
+    if(act==='catAdd'){S.cats=[...EXP.filter(c=>c!=='Other'),v];setCats()}else renameCat(k,v)}
+  else if(act==='catDel'){if(!confirm(`Remove "${k}"? Its entries move to Other, and its allowance is removed.`))return;renameCat(k,'Other')}
   else if(act==='addAllow'){const c=document.getElementById('allowCat').value;S.allow[c]='';focus='allow.'+c}
   else if(act==='delAllow'){delete S.allow[k];M.forEach(m=>delete S.months[m].allow?.[k])}
   else if(act==='del'){if(k==='items'&&!confirm(`Delete goal "${S.items[i].name}"? Its monthly amounts stop counting.`))return;const ref=get(k).splice(i,1)[0]?.ref;if(ref)S.gone.push(ref)}
@@ -476,7 +664,7 @@ function bankImport(text){
     const name=bankName(String(r[ni])),cat=a>0?'Income':guess(name);
     // Same amount AND same category, so a $100 ATM withdrawal doesn't check off a $100 savings goal.
     const it=S.items.find(it=>active(it,mi)&&!m.rec[it.id]?.ref&&m.rec[it.id]?.status!=='Done'&&it.cat===cat&&n(eff(it,mi))===Math.abs(a));
-    if(it){Object.assign(m.rec[it.id]??={},{status:'Done',date,ref});res.paid++;continue}
+    if(it){Object.assign(m.rec[it.id]??={},{status:'Done',date,ref});it.day=String(dd);res.paid++;continue}
     m.lines.push({name,cat,amount:Math.abs(a).toFixed(2),date,status:'Done',ref});res.added++;
   }
   return res;
@@ -561,9 +749,10 @@ function paintDrive(){
     :`<span>☁ Drive backup on · ${D.busy?'saving…':!tokenOk()&&D.dirty?'paused, reconnect to save':D.dirty?'saving soon…':D.last?'saved '+ago(D.last):'connected'}${D.err?' · '+esc(D.err):''}</span>
       <button data-drive="restore">Restore from Drive</button><button data-drive="off">Turn off</button>`;
   const days=(Date.now()-(D.last||D.first))/864e5;
-  ban.innerHTML=D.on&&D.dirty&&!tokenOk()?`<div>☁ Your changes aren't backed up yet. Google sign-in expired. <button class="go" data-drive="reconnect">Reconnect</button></div>`
+  const pc=payCheck();
+  ban.innerHTML=(pc&&pc.left<0?`<div>💵 This paycheck is short by ${usd(-pc.left)} for the bills due by ${shortDate(pc.end)}. <button class="go" data-act="jump" data-k="dash:paycheck">See bills</button></div>`:'')+(D.on&&D.dirty&&!tokenOk()?`<div>☁ Your changes aren't backed up yet. Google sign-in expired. <button class="go" data-drive="reconnect">Reconnect</button></div>`
     :!D.on&&days>=7&&Date.now()>(D.snooze||0)?`<div>It's been ${D.last?Math.floor(days)+' days since your last backup':'a while and you haven\'t backed up yet'}.
-      ${GOOGLE_CLIENT_ID?'<button class="go" data-drive="on">☁ Turn on Drive backup</button>':''}<button data-drive="export">Export backup</button><button data-drive="snooze">Later</button></div>`:'';
+      ${GOOGLE_CLIENT_ID?'<button class="go" data-drive="on">☁ Turn on Drive backup</button>':''}<button data-drive="export">Export backup</button><button data-drive="snooze">Later</button></div>`:'');
 }
 document.addEventListener('click',e=>{
   const a=e.target.closest('[data-drive]')?.dataset.drive;if(!a)return;
@@ -580,12 +769,20 @@ addEventListener('online',()=>D.dirty&&backupNow());
 setInterval(()=>D.on&&paintDrive(),60e3); // refreshes "saved N min ago"; does nothing in the background
 
 // Self-checks (made-up numbers): month totals, the keyword guesser, recurring math, bank import, cents.
-{const s=S;S=seed();
+{const s=S;S=seed();setCats();
  S.months.Oct.lines=[['Pay','Income','2000'],['Pay','Income','1000.50'],['Groceries','Food','200'],['Gas','Transportation','174'],['Car insurance','Transportation','281']]
    .map(([name,cat,amount])=>({name,cat,amount,date:'',status:'Done'}));
  const c=calc(9);
  console.assert(c.inc===3000.5&&c.total===655&&c.left===2345.5&&c.cats.Transportation===455,'calc self-check failed',c);
  console.assert(guess('Chips')==='Food'&&guess('Vehicle Insurance')==='Transportation'&&guess('Netflix')==='Entertainment'&&guess('Rent')==='Housing'&&guess('gas bill')==='Utilities'&&guess('Gas')==='Transportation'&&guess('xyz')==='Other','guess self-check failed');
+ // paycheck: a $600 bill due today against a $500 paycheck is short by $100; next paycheck has no bills
+ S.pay={next:today(),every:'14',amount:'500'};S.items.push({id:'p',name:'Phone',cat:'Utilities',amount:'600',start:0,day:today().slice(8)});
+ const p0=payCheck(0),p1=payCheck(1);S.items.pop();
+ console.assert(p0.left===-100&&p0.bills.length===1&&p1.left===500,'paycheck self-check failed',p0,p1);
+ // renaming a category moves its entries; removing one sends them to Other
+ renameCat('Food','Groceries');const g=calc(9).cats.Groceries;renameCat('Groceries','Other');
+ console.assert(g===200&&calc(9).cats.Other===200&&!EXP.includes('Food')&&!EXP.includes('Groceries')&&guess('Chips')==='Other'&&S.alias.Food==='Other','category self-check failed');
+ S.cats=S.alias=null;setCats();
  S.items.push({id:'t',name:'Rent',cat:'Housing',amount:'1000',start:2});freeze(S.items.at(-1),5);S.items.at(-1).amount='1200';
  console.assert(calc(4).cats.Housing===1000&&calc(5).cats.Housing===1200&&calc(1).cats.Housing===0,'recurring self-check failed');
  S.items[0].amount='40.08'; // a savings goal with the same amount as the gas purchase must not get checked off
@@ -596,7 +793,11 @@ setInterval(()=>D.on&&paintDrive(),60e3); // refreshes "saved N min ago"; does n
  console.assert(b1.paid===1&&b1.added===1&&b1.pending===1&&b2.dup===2&&b2.added===0&&!S.months.May.rec.g0&&S.months.May.rec.t.status==='Done'
    &&l.name==='Circle K'&&l.cat==='Transportation'&&l.amount==='40.08'&&l.date===`${S.year}-05-02`,'bank import self-check failed',b1,b2,l);
  console.assert(money('a','45')==='45.00'&&money('a','')===''&&money('year','2026')==='2026','cents self-check failed');
- S=s;}
+ S=s;setCats();}
+
+// Daily streak: opening the app on back-to-back days keeps it going.
+{const t=today(),d=new Date();d.setDate(d.getDate()-1);const s=S.streak??={};
+ if(s.last!==t){s.count=s.last===iso(d)?(s.count||1)+1:1;s.best=Math.max(s.best||0,s.count);s.last=t;save()}}
 
 render();spinTo(S.view);paintWheel();paintDrive();handleRedirect();if(D.dirty)backupNow();
 navigator.storage?.persist?.(); // asks the phone not to clear app data when space runs low
