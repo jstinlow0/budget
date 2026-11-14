@@ -125,7 +125,7 @@ footer button,footer label,.banner button{border:1px solid var(--line);backgroun
   <label>Import backup <input id="import" type="file" accept="application/json,.json" hidden></label>
   <label>Import bank CSV <input id="bank" type="file" accept=".csv,text/csv" hidden></label>
   <span>Data is saved on this device, plus your own Google Drive if Drive backup is on.</span>
-  <span>App version 2026.11.01-1 <!-- change this date each time you upload a new version --></span>
+  <span>App version 2026.11.14-1 <!-- change this date each time you upload a new version --></span>
 </footer>
 <script>
 // ===== 2. CATEGORIES: names, colors (--c1..--c8 above) and the words that pick them =====
@@ -135,12 +135,12 @@ const color=k=>k==='Income'?'var(--ok)':EXP.indexOf(k)<8&&EXP.includes(k)?`var(-
 const KW={
   Income:'salary,paycheck,payroll,pay,wage,bonus,income,refund,dividend,freelance,tips,commission,reimbursement,cashback,side hustle,deposit',
   Housing:'rent,mortgage,hoa,renters insurance,home insurance,property tax,cleaning,maid,furniture,home repair,repair,landlord,parking fee,storage',
-  Food:'grocery,groceries,food,chips,snack,restaurant,dinner,lunch,breakfast,coffee,starbucks,mcdonalds,pizza,burger,taco,sushi,doordash,uber eats,grubhub,costco,trader joes,safeway,kroger,whole foods,aldi,boba,drink,beer,wine,bakery,takeout,fast food,chipotle,candy,soda,meal,mcdonald,wendy,popeyes,culvers,burger king,taco bell,caribou,bonchon,cub foods,super market,supermarket,vending,fooda,liquor,banh mi,tous les jours,seafood',
+  Food:'grocery,groceries,food,chips,snack,restaurant,dinner,lunch,breakfast,coffee,starbucks,pizza,burger,taco,sushi,doordash,uber eats,grubhub,costco,trader joes,safeway,kroger,whole foods,aldi,boba,drink,beer,wine,bakery,takeout,fast food,chipotle,candy,soda,meal,mcdonald,wendy,popeyes,culvers,caribou,bonchon,cub foods,super market,supermarket,vending,fooda,liquor,banh mi,tous les jours,seafood',
   Transportation:'gas,fuel,shell,chevron,exxon,arco,uber,lyft,car,vehicle,auto,toll,parking,registration,dmv,maintenance,oil change,tire,bus,train,metro,transit,car payment,car insurance,vehicle insurance,auto insurance,smog,car wash,circle k,circlek,speedway,bp,holiday,mazda,progressive,prog preferred,impark,onstreet',
   Utilities:'electric,electricity,power,water,natural gas,gas bill,internet,wifi,phone,cell,mobile,tv,cable,trash,sewer,utility,utilities,verizon,at&t,t-mobile,comcast,xfinity,spectrum,pg&e,xcel,energy',
   Personal:'shopping,amazon,clothes,clothing,shoe,haircut,salon,barber,target,walmart,gift,makeup,toiletries,laundry,doctor,dentist,pharmacy,medicine,cvs,walgreens,gym,fitness,health,medical,therapy,glasses,health insurance,school,tuition,book,pet,vet,petco,wal-mart,wm supercenter,old navy,best buy,ikea,betterhelp,office depot,officedepo',
-  Entertainment:'netflix,spotify,hulu,disney,youtube,movie,game,steam,playstation,xbox,nintendo,concert,outing,ticket,subscription,tcg,pokemon,trading card,hobby,travel,hotel,flight,airbnb,bar,club,party,fun,patreon,casino,gaming,games,cards',
-  Debt:'loan,student loan,school loan,credit card,cc payment,debt,payoff,installment,affirm,klarna,minimum payment,e-payment,crcardpmt,cc payment,mobile pmt',
+  Entertainment:'netflix,spotify,hulu,disney,youtube,movie,game,steam,playstation,xbox,nintendo,concert,outing,ticket,subscription,tcg,pokemon,trading card,hobby,travel,hotel,flight,airbnb,bar,club,party,fun,patreon,casino,gaming,cards',
+  Debt:'loan,student loan,school loan,credit card,cc payment,debt,payoff,installment,affirm,klarna,minimum payment,e-payment,crcardpmt,mobile pmt',
   'Savings & Goals':'savings,save,emergency,retirement,401k,ira,roth,invest,investing,investment,brokerage,fund,down payment,goal,hysa,stock,crypto,acorns,way2save'};
 const RULES=Object.entries(KW).flatMap(([cat,words])=>words.split(',').map(w=>({cat,len:w.length,re:new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}s?\\b`,'i')})));
 const norm=s=>String(s||'').trim().toLowerCase();
@@ -155,7 +155,6 @@ function guess(name){
 const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const KEY='zero-based-budget-v1';
-const xl=s=>new Date(Date.UTC(1899,11,30)+s*864e5).toISOString().slice(0,10); // Excel serial date -> ISO
 const n=v=>+v||0, r2=v=>Math.round(v*100)/100;
 const usd=v=>v.toLocaleString('en-US',{style:'currency',currency:'USD'});
 const pct=v=>(v*100).toFixed(1)+'%';
@@ -163,37 +162,18 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>`&#${ch.charCodeAt(0)};`);
 const uid=()=>'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 let S;
 
-// Data from the original spreadsheet, so the app starts where the sheet left off.
+// A new install starts empty, with a few common goals and assets to fill in. (This file is public on GitHub: no real numbers here.)
 function seed(){
-  const S={name:'Justin',title:'Zero-Based Budget',year:'2026',view:'Oct',months:{},netWorth:{Oct:'0'},learned:{},
-    items:[['Emergency Fund',46568],['Retirement Investing',51501],['Vacation Fund',46538],['Home Down Payment',47118],['New Car',47299]]
-      .map(([name,d],i)=>({id:'g'+i,name,cat:'Savings & Goals',amount:'',start:0,manual:true,target:'',date:xl(d),notes:''})),
-    assets:[['Gold'],['Stock'],['Real Estate'],['Land'],['Partnership 1'],['Crypto currency'],['TCG','9912','Gathered from Collectr']]
-      .map(([name,value='',notes=''])=>({name,value,notes})),
-    liabilities:[{name:'Credit Card',value:'',notes:'Not sure if CC is totaled here since its paid in full always.'},{name:'Car Loan',value:'',notes:''}]};
+  const d=new Date(),S={name:'',title:'Zero-Based Budget',year:String(d.getFullYear()),view:M[d.getMonth()],months:{},netWorth:{},learned:{},allow:{},gone:[],
+    items:['Emergency Fund','Retirement Investing','Vacation Fund','Home Down Payment','New Car']
+      .map((name,i)=>({id:'g'+i,name,cat:'Savings & Goals',amount:'',start:0,manual:true,target:'',date:'',notes:''})),
+    assets:['Gold','Stock','Real Estate','Land','Crypto currency'].map(name=>({name,value:'',notes:''})),
+    liabilities:['Credit Card','Car Loan'].map(name=>({name,value:'',notes:''}))};
   M.forEach(m=>S.months[m]={lines:[],rec:{}});
-  S.months.Sep.lines.push({name:'Main income',cat:'Income',amount:'2000',date:'',status:'Done',manual:true});
-  S.months.Sep.rec.g0={amount:'2000',date:'',status:'Done'};
-  S.months.Oct.lines=[['Salary bi weekly payment','Income',1124.2,46297],['Salary bi weekly payment','Income',1124.21,46311],
-    ['Salary bi weekly payment','Income',1124.21,46324],['Card Cleaning','Income',98,46300],['Electric','Utilities',50,46304],
-    ['Home insurance','Housing',21,46298],['Groceries','Food',200,46297],['Gas','Transportation',174,46302],['Vehicle insurance','Transportation',281,46298]]
-    .map(([name,cat,a,d])=>({name,cat,amount:String(a),date:xl(d),status:'Done',manual:true}));
   return S;
 }
-// Converts backups from the first version of the app (income/expenses tables) to entries.
-function migrate(o){
-  if(o.items)return o;
-  const st=s=>s==='Paid'||s==='Received'?'Done':s?'Upcoming':'';
-  const N={name:o.name,title:o.title,year:o.year,view:o.view||'Jan',netWorth:o.netWorth||{},assets:o.assets||[],liabilities:o.liabilities||[],learned:{},months:{},
-    items:(o.goals||[]).map(g=>({id:g.id,name:g.name,cat:'Savings & Goals',amount:'',start:0,manual:true,target:g.target,date:g.date,notes:g.notes}))};
-  M.forEach(m=>{const om=o.months[m],lines=[],rec={};
-    om.income.forEach(r=>n(r.amount)&&lines.push({name:r.source||r.type+' income',cat:'Income',amount:r.amount,date:r.date,status:st(r.status),manual:true}));
-    for(const c in om.expenses)om.expenses[c].forEach(r=>{if(!n(r.amount))return;const g=guess(r.sub);
-      lines.push({name:r.sub,cat:g==='Other'&&EXP.includes(c)?c:g,amount:r.amount,date:r.date,status:st(r.status)})});
-    for(const id in om.goals||{}){const g=om.goals[id];if(n(g.amount))rec[id]={amount:g.amount,date:g.date,status:st(g.status)}}
-    N.months[m]={lines,rec}});
-  return N;
-}
+// Fills in anything an older save or backup is missing, so every screen can rely on it.
+function tidy(){S.netWorth??={};S.learned??={};S.allow??={};S.gone??=[];if(!M.includes(S.view))S.view='Jan'}
 
 const active=(it,mi)=>it.start<=mi&&(it.end==null||mi<=it.end);
 // A recurring item uses its usual amount unless this month has its own amount.
@@ -210,14 +190,15 @@ function calc(mi){
 }
 const msg=c=>!c.tone?'Start by adding your income, then give every dollar a job':c.left===0?'Zero-based: every dollar has a job'
   :c.left>0?`Assign ${usd(c.left)} more to reach $0.00`:`Over budget by ${usd(-c.left)}. Trim an expense.`;
-const goalSaved=it=>r2(M.reduce((a,m,mi)=>a+(active(it,mi)?n(eff(it,mi)):0),0));
+// carried = what a goal had saved before this year (set by "Start new year").
+const goalSaved=it=>r2(M.reduce((a,m,mi)=>a+(active(it,mi)?n(eff(it,mi)):0),n(it.carried)));
 const totalOf=rows=>r2(rows.reduce((a,r)=>a+n(r.value),0));
 const netWorth=()=>r2(totalOf(S.assets)-totalOf(S.liabilities));
 // Changing a usual amount applies from the month you're on; earlier months keep the old amount.
 function freeze(it,mi){for(let i=it.start;i<mi;i++){const r=S.months[M[i]].rec[it.id]??={};if(r.amount==null||r.amount==='')r.amount=String(n(it.amount))}}
 
-try{const d=JSON.parse(localStorage.getItem(KEY));if(d)S=migrate(d)}catch{}
-S??=seed();S.allow??={};
+try{S=JSON.parse(localStorage.getItem(KEY))}catch{}
+S??=seed();tidy();
 let tab='dash',selCat=null,spins=0,resort=false;
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch{}scheduleBackup()};
 const get=k=>k.split('.').reduce((o,p)=>o?.[p],S);
@@ -234,7 +215,7 @@ const del=(k,i,label)=>`<button class="x" data-act="del" data-k="${k}" data-i="$
 const card=(label,v,cls='',jump)=>`<div class="card ${cls}" data-c${jump?` data-act="jump" data-k="${jump}" role="button" tabindex="0"`:''}><span>${label}</span><b>${typeof v==='number'?usd(v):v}</b></div>`;
 const bar=(p,cls='')=>`<div class="bar"><i data-c class="${cls}" style="width:${Math.min(Math.max(p,0),1)*100}%"></i></div>`;
 const C=(v,cls='n')=>`<td class="${cls}" data-c>${v}</td>`;
-const grp=(cat,cols)=>`<tr class="grp"${cat==='Income'?' data-jump="income"':cat==='Savings & Goals'?' data-jump="savings"':''}><td colspan="${cols}"><span class="dot" style="background:${color(cat)}"></span>${cat}</td></tr>`;
+const grp=(cat,cols)=>`<tr class="grp"${cat==='Income'?' data-jump="income"':cat==='Savings & Goals'?' data-jump="savings"':''}><td colspan="${cols}"><span class="dot" style="background:${color(cat)}"></span>${esc(cat)}</td></tr>`;
 // Rows shown grouped by category, so an entry moves to its category once it's named.
 function grouped(rows,cols,row){let last,out='';
   rows.sort((a,b)=>CATS.indexOf(a.r.cat)-CATS.indexOf(b.r.cat)||a.i-b.i).forEach(x=>{if(x.r.cat!==last)out+=grp(last=x.r.cat,cols);out+=row(x.r,x.i)});
@@ -311,7 +292,8 @@ function dashboard(){
   return `<h2>Dashboard <span data-c>${esc(S.year)}</span></h2>
   <details class="settings"><summary>⚙ Settings</summary><div class="cards" style="margin:10px 0 4px">
     <label>Your name ${inp('name',S.name,'Your name')}</label><label>Title ${inp('title',S.title,'Title')}</label>
-    <label>Year ${inp('year',S.year,'Year','number')}</label><label>View month ${sel('view',S.view,M,'View month').replace('<option></option>','')}</label></div></details>
+    <label>Year ${inp('year',S.year,'Year','number')}</label><label>View month ${sel('view',S.view,M,'View month').replace('<option></option>','')}</label></div>
+    <button class="add" data-act="newYear">Start ${n(S.year)+1}</button> <span class="hint">Saves a backup of ${esc(S.year)}, then clears every month's entries. Recurring items, allowances, goals and assets stay.</span></details>
   <div class="cards">${card('Total net worth',netWorth(),'','assets:')}${card('Income · '+S.view,v.inc,'',S.view+':income')}${card('Spent + saved · '+S.view,v.total,'',S.view+':spending')}
     ${card('Left to assign · '+S.view,v.left,v.tone,S.view+':savings')}${card('Savings rate · '+S.view,pct(v.rate),'',S.view+':savings')}</div>
   <section class="fit"><h3>Where the money goes · <span data-c>${S.view}</span></h3>${catWheel(v)}</section>
@@ -356,15 +338,16 @@ const app=document.getElementById('app'),ttl=document.getElementById('ttl'),whee
 function render(){
   app.innerHTML=html();
   document.querySelectorAll('header [data-act=tab]').forEach(b=>b.classList.toggle('on',b.dataset.k===tab));
-  ttl.textContent=document.title=`${S.name} · ${S.title}`;
+  ttl.textContent=document.title=heading();
 }
+const heading=()=>[S.name,S.title].filter(Boolean).join(' · ');
 // Update computed cells in place so typing never loses focus.
 function refresh(){
   const t=document.createElement('div');t.innerHTML=html();
   const a=app.querySelectorAll('[data-c]'),b=t.querySelectorAll('[data-c]');
   if(a.length!==b.length)return render();
   a.forEach((el,i)=>{el.innerHTML=b[i].innerHTML;if(b[i].dataset.k)el.dataset.k=b[i].dataset.k;if(typeof el.className==='string')el.className=b[i].className;el.style.cssText=b[i].style.cssText});
-  ttl.textContent=`${S.name} · ${S.title}`;
+  ttl.textContent=heading();
 }
 function focusKey(k){const el=k&&app.querySelector(`[data-k="${CSS.escape(k)}"]`);if(el){el.focus({preventScroll:false});return el}}
 
@@ -430,13 +413,18 @@ document.addEventListener('click',e=>{
   else if(act==='addItem'){S.items.push({id:uid(),name:'',cat:'Other',amount:'',start:mi});focus=`items.${S.items.length-1}.name`}
   else if(act==='addGoal'){S.items.push({id:uid(),name:'New goal',cat:'Savings & Goals',amount:'',start:0,manual:true,target:'',date:'',notes:''});focus=`items.${S.items.length-1}.name`}
   else if(act==='recur'){const m=S.months[tab],l=m.lines[i],id=uid();
-    S.items.push({id,name:l.name,cat:l.cat,amount:l.amount,start:mi,manual:l.manual});m.rec[id]={date:l.date,status:l.status};m.lines.splice(i,1)}
+    S.items.push({id,name:l.name,cat:l.cat,amount:l.amount,start:mi,manual:l.manual});m.rec[id]={date:l.date,status:l.status,ref:l.ref};m.lines.splice(i,1)}
   else if(act==='stop'){const it=S.items[i];
     if(it.start>=mi){if(!confirm(`Remove "${it.name||'this item'}"? It only started this month.`))return;S.items.splice(i,1)}
     else{if(!confirm(`Stop "${it.name}" from ${tab} on? Earlier months keep it.`))return;it.end=mi-1}}
+  else if(act==='newYear'){const y=n(S.year)+1;
+    if(!confirm(`Start ${y}?\n\nA backup of ${S.year} is saved first (choose where to keep it). Then every month's entries are cleared. Recurring items, allowances, goals, assets and learned categories stay.`))return;
+    document.getElementById('export').click(); // copies the data right away, before anything below changes it
+    S.items=S.items.filter(it=>it.end==null).map(it=>({...it,start:0,carried:it.cat==='Savings & Goals'?goalSaved(it):it.carried}));
+    M.forEach(m=>S.months[m]={lines:[],rec:{}});Object.assign(S,{year:String(y),view:'Jan',netWorth:{},gone:[]});tab='Jan';spinTo('Jan',true)}
   else if(act==='addAllow'){const c=document.getElementById('allowCat').value;S.allow[c]='';focus='allow.'+c}
   else if(act==='delAllow'){delete S.allow[k];M.forEach(m=>delete S.months[m].allow?.[k])}
-  else if(act==='del'){if(k==='items'&&!confirm(`Delete goal "${S.items[i].name}"? Its monthly amounts stop counting.`))return;get(k).splice(i,1)}
+  else if(act==='del'){if(k==='items'&&!confirm(`Delete goal "${S.items[i].name}"? Its monthly amounts stop counting.`))return;const ref=get(k).splice(i,1)[0]?.ref;if(ref)S.gone.push(ref)}
   save();render();focusKey(focus);
 });
 document.getElementById('export').onclick=async()=>{
@@ -447,9 +435,9 @@ document.getElementById('export').onclick=async()=>{
   if(navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:name});return done()}catch(e){if(e.name==='AbortError')return}}
   const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);done();
 };
-const isBackup=d=>d&&typeof d.months==='object'&&Array.isArray(d.assets)&&Array.isArray(d.liabilities)&&M.every(m=>d.months[m])
-  &&(Array.isArray(d.items)?M.every(m=>Array.isArray(d.months[m].lines)):Array.isArray(d.goals)&&M.every(m=>d.months[m].income&&d.months[m].expenses));
-function load(d){S=migrate(d);S.netWorth??={};S.learned??={};S.allow??={};tab='dash';save();render();spinTo(S.view)}
+const isBackup=d=>d&&typeof d.months==='object'&&Array.isArray(d.assets)&&Array.isArray(d.liabilities)&&Array.isArray(d.items)
+  &&M.every(m=>Array.isArray(d.months[m]?.lines)&&typeof d.months[m].rec==='object');
+function load(d){S=d;tidy();tab='dash';save();render();spinTo(S.view)}
 document.getElementById('import').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   try{const d=JSON.parse(await f.text());if(!isBackup(d))throw 0;
@@ -472,21 +460,24 @@ const bankName=d=>d.replace(/\s+/g,' ').replace(/^(PURCHASE( RETURN)?|RECURRING 
   .replace(/ ?(\S*\d{4}|(?=\S*\d)\S{10,})\S*.*$/,'').replace(/ [A-Z]{2}$/,'').replace(/ +/g,' ').trim().toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase())||'Bank transaction';
 function bankImport(text){
   const rows=csv(text),head=rows[0].map(norm),col=re=>head.findIndex(h=>re.test(h));
-  let [di,ni,ai]=[col(/date/),col(/desc|payee|name|memo/),col(/amount/)];
+  let [di,ni,ai,si]=[col(/date/),col(/desc|payee|name|memo/),col(/amount/),col(/status/)];
   if(di<0||ni<0||ai<0){if(rows[0].length===5&&/\d\/\d/.test(rows[0][0]))[di,ni,ai]=[0,4,1];else return null}// Wells Fargo files without a header row
   else rows.shift();
   // shortcut: banks that split money into separate Debit/Credit columns aren't read, add them if someone needs it
-  const seen=new Set(M.flatMap(m=>[...S.months[m].lines.map(l=>l.ref),...Object.values(S.months[m].rec).map(r=>r.ref)]));
-  const res={added:0,paid:0,dup:0,other:0};
+  // S.gone = rows you deleted after importing, so they don't come back.
+  const seen=new Set([...S.gone,...M.flatMap(m=>[...S.months[m].lines.map(l=>l.ref),...Object.values(S.months[m].rec).map(r=>r.ref)])]);
+  const res={added:0,paid:0,dup:0,other:0,pending:0};
   for(const r of rows){
+    if(si>=0&&/pend/i.test(r[si])){res.pending++;continue} // the posted version comes in a later download
     const [mm,dd,yy]=String(r[di]).split('/').map(Number),a=n(String(r[ai]).replace(/[$,]/g,''));
     if(!mm||!a||String(yy).slice(-2)!==String(S.year).slice(-2)){res.other++;continue}
     const ref=[r[di],r[ai],r[ni]].join('|');if(seen.has(ref)){res.dup++;continue}seen.add(ref);
     const mi=mm-1,m=S.months[M[mi]],date=`${S.year}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
-    const it=S.items.find(it=>active(it,mi)&&!m.rec[it.id]?.ref&&m.rec[it.id]?.status!=='Done'&&(it.cat==='Income')===(a>0)&&n(eff(it,mi))===Math.abs(a));
+    const name=bankName(String(r[ni])),cat=a>0?'Income':guess(name);
+    // Same amount AND same category, so a $100 ATM withdrawal doesn't check off a $100 savings goal.
+    const it=S.items.find(it=>active(it,mi)&&!m.rec[it.id]?.ref&&m.rec[it.id]?.status!=='Done'&&it.cat===cat&&n(eff(it,mi))===Math.abs(a));
     if(it){Object.assign(m.rec[it.id]??={},{status:'Done',date,ref});res.paid++;continue}
-    const name=bankName(String(r[ni]));
-    m.lines.push({name,cat:a>0?'Income':guess(name),amount:Math.abs(a).toFixed(2),date,status:'Done',ref});res.added++;
+    m.lines.push({name,cat,amount:Math.abs(a).toFixed(2),date,status:'Done',ref});res.added++;
   }
   return res;
 }
@@ -495,7 +486,7 @@ document.getElementById('bank').onchange=async e=>{
   const before=JSON.stringify(S),res=bankImport(await f.text());
   if(!res)return alert('That file doesn\'t look like a bank CSV (it needs Date, Description and Amount columns).');
   if(!confirm(`Add ${res.added} entries and check off ${res.paid} recurring bills?`+(res.dup?`\n${res.dup} were already imported and will be skipped.`:'')
-    +(res.other?`\n${res.other} rows are not in ${S.year} and will be skipped.`:''))){S=JSON.parse(before);return}
+    +(res.other?`\n${res.other} rows are not in ${S.year} and will be skipped.`:'')+(res.pending?`\n${res.pending} pending rows will be skipped until they post.`:''))){S=JSON.parse(before);return}
   save();render();
 };
 
@@ -512,7 +503,7 @@ if(!D.first){D.first=Date.now();saveD()}  // backup reminder counts from first u
 const tokenOk=()=>!!D.token&&Date.now()<D.exp-60e3;
 const appUrl=()=>location.origin+location.pathname.replace(/index\.html$/,'');
 function connect(after=''){
-  D.state=Math.random().toString(36).slice(2);D.after=after;saveD();
+  D.state=crypto.randomUUID();D.after=after;saveD();
   location.href='https://accounts.google.com/o/oauth2/v2/auth?'+new URLSearchParams({client_id:GOOGLE_CLIENT_ID,redirect_uri:appUrl(),
     response_type:'token',scope:'https://www.googleapis.com/auth/drive.file',include_granted_scopes:'true',state:D.state});
 }
@@ -536,7 +527,7 @@ async function backupNow(keepalive=false){
   const body=JSON.stringify(S);D.busy=true;paintDrive();
   try{
     let r;
-    if(D.fileId){r=await api(`${API}/upload/drive/v3/files/${D.fileId}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body,keepalive});
+    if(D.fileId){r=await api(`${API}/upload/drive/v3/files/${D.fileId}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body,keepalive:keepalive&&body.length<6e4});  // browsers refuse keepalive uploads over 64 KB
       if(r.status===404)D.fileId=null}  // someone deleted it in Drive: make a new one
     if(!D.fileId){const b='zbb'+Date.now();
       r=await api(`${API}/upload/drive/v3/files?uploadType=multipart&fields=id`,{method:'POST',headers:{'Content-Type':`multipart/related; boundary=${b}`},
@@ -588,15 +579,22 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 addEventListener('online',()=>D.dirty&&backupNow());
 setInterval(()=>D.on&&paintDrive(),60e3); // refreshes "saved N min ago"; does nothing in the background
 
-// Self-checks: the spreadsheet's October numbers, the keyword guesser, and recurring math.
-{const s=S;S=seed();const c=calc(9);
- console.assert(c.inc===3470.62&&c.total===726&&c.left===2744.62&&c.cats.Transportation===455,'calc self-check failed',c);
+// Self-checks (made-up numbers): month totals, the keyword guesser, recurring math, bank import, cents.
+{const s=S;S=seed();
+ S.months.Oct.lines=[['Pay','Income','2000'],['Pay','Income','1000.50'],['Groceries','Food','200'],['Gas','Transportation','174'],['Car insurance','Transportation','281']]
+   .map(([name,cat,amount])=>({name,cat,amount,date:'',status:'Done'}));
+ const c=calc(9);
+ console.assert(c.inc===3000.5&&c.total===655&&c.left===2345.5&&c.cats.Transportation===455,'calc self-check failed',c);
  console.assert(guess('Chips')==='Food'&&guess('Vehicle Insurance')==='Transportation'&&guess('Netflix')==='Entertainment'&&guess('Rent')==='Housing'&&guess('gas bill')==='Utilities'&&guess('Gas')==='Transportation'&&guess('xyz')==='Other','guess self-check failed');
  S.items.push({id:'t',name:'Rent',cat:'Housing',amount:'1000',start:2});freeze(S.items.at(-1),5);S.items.at(-1).amount='1200';
  console.assert(calc(4).cats.Housing===1000&&calc(5).cats.Housing===1200&&calc(1).cats.Housing===0,'recurring self-check failed');
- const f=`"DATE","DESCRIPTION","AMOUNT"\n"05/01/${S.year}","RENT, MAY","-1,000.00"\n"05/02/${S.year}","PURCHASE AUTHORIZED ON 05/01 CIRCLE K #26 1770 SAINT PAUL MN P0000004478 CARD 7077","-40.08"\n`;
- const b1=bankImport(f),b2=bankImport(f),l=S.months.May.lines.at(-1);
- console.assert(b1.paid===1&&b1.added===1&&b2.dup===2&&S.months.May.rec.t.status==='Done'&&l.name==='Circle K'&&l.cat==='Transportation'&&l.date===`${S.year}-05-02`,'bank import self-check failed',b1,b2,l);
+ S.items[0].amount='40.08'; // a savings goal with the same amount as the gas purchase must not get checked off
+ const f=`"DATE","DESCRIPTION","AMOUNT","STATUS"\n"05/01/${S.year}","RENT, MAY","-1,000.00","Posted"\n"05/02/${S.year}","PURCHASE AUTHORIZED ON 05/01 CIRCLE K #26 1770 SAINT PAUL MN P0000004478 CARD 7077","-40.08","Posted"\n"05/03/${S.year}","TARGET","-9.99","Pending"\n`;
+ const b1=bankImport(f),l=S.months.May.lines.at(-1);
+ S.gone.push(S.months.May.lines.pop().ref); // deleting an imported row keeps it from coming back
+ const b2=bankImport(f);
+ console.assert(b1.paid===1&&b1.added===1&&b1.pending===1&&b2.dup===2&&b2.added===0&&!S.months.May.rec.g0&&S.months.May.rec.t.status==='Done'
+   &&l.name==='Circle K'&&l.cat==='Transportation'&&l.amount==='40.08'&&l.date===`${S.year}-05-02`,'bank import self-check failed',b1,b2,l);
  console.assert(money('a','45')==='45.00'&&money('a','')===''&&money('year','2026')==='2026','cents self-check failed');
  S=s;}
 
